@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Delivery Maturity Assessment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        .practice-area {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .option {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        .option.selected {
+            background-color: #d4edff;
+            border-color: #3498db;
+        }
+        .level-indicator {
+            font-weight: bold;
+            color: #3498db;
+        }
+        .description {
+            margin-top: 5px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #results {
+            display: none;
+            margin-top: 30px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .result-card {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .result-level {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .radar-chart {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .overall-result {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .action-plan {
+            background-color: #eaf7ff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        @media print {
+            button {
+                display: none;
+            }
+            .option:not(.selected) {
+                display: none;
+            }
+            #results {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Continuous Delivery Maturity Assessment</h1>
+    
+    <p>This assessment will help determine your organization's maturity level in the Continuous Delivery Maturity Model across eight key practice areas. For each practice area, select the statement that best describes your current state.</p>
+    
+    <div id="assessment">
+        <div class="practice-area" id="build-management">
+            <h2>1. Build Management & Continuous Integration</h2>
+            <p>Which statement best describes your build and integration processes?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Manual processes for building software. No management of dependencies.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Regular automated build & testing. Any build can be re-created from source control using automated process.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Automated build & test cycle every time a change is committed. Dependencies managed. In use of scripts & tools.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Build metrics gathered, made visible, & acted on. Builds are not left broken.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Teams regularly meet to discuss integration & fix them with automation, faster feedback, & better visibility.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="environments">
+            <h2>2. Environments & Provisioning</h2>
+            <p>Which statement best describes your environment management and provisioning?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Manual process for deploying software. Environment-specific binaries & deployments.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Automated deployment to some environments. Creation of new environments is cheap. All configuration is externalized & versioned.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Fully automated, self service push-button process for deploying software. Same process to deploy to every environment.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Orchestrated deployments managed. Release & rollback processes tested.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">All environments managed effectively. Provisioning fully automated. Virtualization used if applicable.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="release-management">
+            <h2>3. Release Management & Compliance</h2>
+            <p>Which statement best describes your release management and compliance processes?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Infrequent & unreliable releases.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Painful & infrequent, but reliable releases. Limited traceability from requirements to release.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Change management & approvals processes defined & enforced. Regulatory & compliance conditions met.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Environment & application health monitored & proactively managed. Cycle time is monitored.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Operations & delivery teams regularly collaborate to manage risks & reduce cycle time.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="testing">
+            <h2>4. Testing</h2>
+            <p>Which statement best describes your testing practices?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Manual testing after development.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Automated tests written as part of story development.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Automated unit & acceptance tests, the latter written with testers. Testing part of the development process.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Quality metrics & trends tracked. Non-functional requirements defined & measured.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Production rollbacks rare. Defects found & fixed immediately.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="data-management">
+            <h2>5. Data Management</h2>
+            <p>Which statement best describes your data management practices?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Data migrations performed manually.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Changes to databases done with automated scripts versioned with application.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Database changes performed automated as part of deployment process.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Database upgrades & rollbacks tested with every deployment. Database performance monitored & optimized.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Release to release faithful copy of database performance & deployment process.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="configuration-management">
+            <h2>6. Configuration Management</h2>
+            <p>Which statement best describes your configuration management practices?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Version control either not used, or check-ins happen infrequently.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Version control in use for everything required to recreate software: source code, configuration, build & deploy scripts, data migrations.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Libraries & dependencies managed. Version control branching strategies determined by change management process.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Developers check in to mainline at least once a day. Mainline only used for releases.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Regular updates to CM policy supports effective collaboration, feature development, & auditable change management processes.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="application">
+            <h2>7. Application</h2>
+            <p>Which statement best describes your application architecture?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Monolithic sites, messy config, everything connects to everything, fragile and/or unclear dependencies.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Non-monolithic sites (system components are separate applications), almost no overlap of runtime is required between components.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Multi-server with shared storage system for shared components. Unestablished sessions, horizontal scaling & application layer.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Session management, robust failure state management, partially decoupled components from application (e.g. CDN), multi-region storage, & feature flags.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Technical, automated service discovery, no shared file system required for component sharing (full CDN integration), apps are directly tied to data sources.</div>
+            </div>
+        </div>
+        
+        <div class="practice-area" id="observability">
+            <h2>8. Observability</h2>
+            <p>Which statement best describes your observability practices?</p>
+            
+            <div class="option" data-level="-1" onclick="selectOption(this)">
+                <div class="level-indicator">Level -1:</div>
+                <div class="description">Human feedback is the primary source of detection.</div>
+            </div>
+            
+            <div class="option" data-level="0" onclick="selectOption(this)">
+                <div class="level-indicator">Level 0:</div>
+                <div class="description">Local log files, SSH loop scripts to view/collect metrics, DevOps alerting manually added servers, inconsistent retention of logs & metrics.</div>
+            </div>
+            
+            <div class="option" data-level="1" onclick="selectOption(this)">
+                <div class="level-indicator">Level 1:</div>
+                <div class="description">Centralized log files, agent-based monitoring, manual alert configuration, manual addition & removal of servers.</div>
+            </div>
+            
+            <div class="option" data-level="2" onclick="selectOption(this)">
+                <div class="level-indicator">Level 2:</div>
+                <div class="description">Automatic environment detection, no manual decoupled components from adding/removing agents, log files (improved over messages as data, can be CDN), multi-region storage, & feature flags.</div>
+            </div>
+            
+            <div class="option" data-level="3" onclick="selectOption(this)">
+                <div class="level-indicator">Level 3:</div>
+                <div class="description">Automatic error detection, environment analysis tools, self-correction.</div>
+            </div>
+        </div>
+        
+        <button onclick="calculateResults()">Calculate Results</button>
+    </div>
+    
+    <div id="results">
+        <h2>Assessment Results</h2>
+        
+        <div class="overall-result">
+            <p>Your overall maturity level: <span id="overall-level"></span></p>
+        </div>
+        
+        <div class="results-grid" id="results-grid"></div>
+        
+        <div class="radar-chart">
+            <canvas id="maturityChart"></canvas>
+        </div>
+        
+        <div class="action-plan">
+            <h2>Recommended Action Plan</h2>
+            <div id="action-plan-content"></div>
+        </div>
+        
+        <button onclick="printResults()">Print Results</button>
+        <button onclick="resetAssessment()">Start Over</button>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let practiceAreas = [
+            { id: 'build-management', name: 'Build Management & CI', level: null },
+            { id: 'environments', name: 'Environments & Provisioning', level: null },
+            { id: 'release-management', name: 'Release Management & Compliance', level: null },
+            { id: 'testing', name: 'Testing', level: null },
+            { id: 'data-management', name: 'Data Management', level: null },
+            { id: 'configuration-management', name: 'Configuration Management', level: null },
+            { id: 'application', name: 'Application', level: null },
+            { id: 'observability', name: 'Observability', level: null }
+        ];
+        
+        let chart = null;
+        
+        function selectOption(element) {
+            // Remove selected class from siblings
+            let parent = element.parentElement;
+            let options = parent.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+        }
+        
+        function calculateResults() {
+            // Collect selected options
+            practiceAreas.forEach(area => {
+                let selectedOption = document.querySelector(`#${area.id} .option.selected`);
+                if (selectedOption) {
+                    area.level = parseInt(selectedOption.getAttribute('data-level'));
+                } else {
+                    area.level = null;
+                }
+            });
+            
+            // Check if all areas have been answered
+            let unansweredAreas = practiceAreas.filter(area => area.level === null);
+            if (unansweredAreas.length > 0) {
+                let areaNames = unansweredAreas.map(area => area.name).join(', ');
+                alert(`Please complete all sections before calculating results. Missing: ${areaNames}`);
+                return;
+            }
+            
+            // Calculate overall level (lowest level across all areas)
+            let overallLevel = Math.min(...practiceAreas.map(area => area.level));
+            
+            // Display results
+            document.getElementById('assessment').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('overall-level').textContent = formatLevel(overallLevel);
+            
+            // Create result cards
+            let resultsGrid = document.getElementById('results-grid');
+            resultsGrid.innerHTML = '';
+            
+            practiceAreas.forEach(area => {
+                let card = document.createElement('div');
+                card.className = 'result-card';
+                card.innerHTML = `
+                    <div class="result-title">${area.name}</div>
+                    <div class="result-level">${formatLevel(area.level)}</div>
+                `;
+                resultsGrid.appendChild(card);
+            });
+            
+            // Create radar chart
+            createRadarChart();
+            
+            // Generate action plan
+            generateActionPlan(overallLevel);
+        }
+        
+        function formatLevel(level) {
+            return level >= 0 ? `Level ${level}` : `Level ${level}`;
+        }
+        
+        function createRadarChart() {
+            const ctx = document.getElementById('maturityChart').getContext('2d');
+            
+            // If chart exists, destroy it
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // Adjust levels to be positive for chart display (add 1 to all values)
+            const adjustedLevels = practiceAreas.map(area => area.level + 1);
+            
+            chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: practiceAreas.map(area => area.name),
+                    datasets: [{
+                        label: 'Maturity Level',
+                        data: adjustedLevels,
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 4,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return value - 1; // Adjust display to show original scale
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function generateActionPlan(overallLevel) {
+            let actionPlanContent = document.getElementById('action-plan-content');
+            
+            // Sort practice areas by level (ascending)
+            let sortedAreas = [...practiceAreas].sort((a, b) => a.level - b.level);
+            
+            let html = '<p>Based on your assessment results, here is a recommended action plan:</p><ol>';
+            
+            // Focus on lowest areas first
+            html += '<li><strong>Address your most critical constraints:</strong><ul>';
+            sortedAreas.filter(area => area.level === overallLevel).forEach(area => {
+                html += `<li>Improve ${area.name} to at least Level ${area.level + 1}</li>`;
+            });
+            html += '</ul></li>';
+            
+            // General recommendations based on overall level
+            if (overallLevel < 0) {
+                html += '<li><strong>Establish basic automation:</strong> Focus on implementing version control and basic build automation.</li>';
+            } else if (overallLevel === 0) {
+                html += '<li><strong>Improve reliability:</strong> Implement consistent automated testing and deployment processes.</li>';
+            } else if (overallLevel === 1) {
+                html += '<li><strong>Enhance monitoring and metrics:</strong> Start measuring performance and quality metrics to drive improvements.</li>';
+            } else if (overallLevel === 2) {
+                html += '<li><strong>Optimize collaboration:</strong> Focus on improving team collaboration and reducing cycle time.</li>';
+            }
+            
+            // Next steps for all areas
+            html += '<li><strong>Incremental improvements for each practice area:</strong><ul>';
+            practiceAreas.forEach(area => {
+                if (area.level < 3) {
+                    html += `<li>${area.name}: Move from ${formatLevel(area.level)} to ${formatLevel(area.level + 1)}</li>`;
+                }
+            });
+            html += '</ul></li>';
+            
+            html += '</ol>';
+            
+            actionPlanContent.innerHTML = html;
+        }
+        
+        function printResults() {
+            window.print();
+        }
+        
+        function resetAssessment() {
+            // Clear all selections
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Reset practice area levels
+            practiceAreas.forEach(area => {
+                area.level = null;
+            });
+            
+            // Show assessment, hide results
+            document.getElementById('assessment').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
