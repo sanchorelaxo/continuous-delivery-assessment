@@ -8,10 +8,7 @@
  * - Creating CSV export
  */
 
-// Import the question database if in Node.js environment
-if (typeof require !== 'undefined') {
-    const { questionDatabase } = require('./questions.js');
-}
+// questionDatabase is available from translations.js
 
 /**
  * Calculate scores for all practice areas based on responses
@@ -106,14 +103,13 @@ function generateRadarChartData(results) {
     
     const labels = [];
     const data = [];
+    const lang = document.documentElement.lang;
     
     // Convert maturity levels to positive numbers for visualization
     // (-1 becomes 0, 0 becomes 1, 1 becomes 2, etc.)
     Object.entries(practiceAreaResults).forEach(([area, result]) => {
-        // Convert camelCase to Title Case with spaces
-        const formattedArea = area
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^./, str => str.toUpperCase());
+        // Get translated area name
+        const formattedArea = translations.practiceAreas[lang][area];
         
         labels.push(formattedArea);
         data.push(result.maturityLevel + 1); // Add 1 to make all values positive
@@ -122,7 +118,7 @@ function generateRadarChartData(results) {
     return {
         labels: labels,
         datasets: [{
-            label: 'Maturity Level',
+            label: translations.ui[lang].maturityLevel,
             data: data,
             backgroundColor: 'rgba(52, 152, 219, 0.2)',
             borderColor: 'rgba(52, 152, 219, 1)',

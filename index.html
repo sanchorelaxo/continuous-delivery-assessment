@@ -167,11 +167,8 @@
     </div>
 
     <div class="container mb-5">
-        <!-- Progress Bar and Language Toggle -->
-        <div class="d-flex align-items-center mb-4">
-            <div class="progress progress-indicator flex-grow-1 me-3">
-                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-            </div>
+        <!-- Language Toggle -->
+        <div class="d-flex justify-content-end mb-4">
             <div class="lang-toggle">
                 <button class="btn btn-outline-primary active" onclick="setLanguage('en_CA')">EN</button>
                 <button class="btn btn-outline-primary ms-2" onclick="setLanguage('fr_CA')">FR</button>
@@ -192,6 +189,16 @@
                                 <nav id="practice-areas-nav" class="nav nav-pills flex-column p-3">
                                     <!-- Practice areas will be dynamically inserted here -->
                                 </nav>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div class="mb-2" id="progress-label">Assessment Progress</div>
+                                <div class="progress progress-indicator">
+                                    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                </div>
                             </div>
                         </div>
                         
@@ -289,7 +296,7 @@
                         </div>
                         
                         <div class="d-flex justify-content-center mt-4">
-                            <button id="export-csv" class="btn btn-success me-2">Export as CSV</button>
+                            <button id="export-btn" class="btn btn-success me-2">Export as CSV</button>
                             <button id="restart-btn" class="btn btn-secondary">Start Over</button>
                         </div>
                     </div>
@@ -332,9 +339,9 @@
             // Generate questions for each practice area
             Object.entries(translations.questionDatabase).forEach(([area, questions]) => {
                 // Create section for this practice area
-                const section = document.createElement('div');
+                const section = document.createElement('section');
                 section.id = area;
-                section.className = 'mb-5';
+                section.className = 'practice-area mb-5';
                 
                 // Get the practice area title from translations or fallback to formatted area name
                 const areaTitle = translations.practiceAreas?.[currentLang]?.[area.replace('-', '')] || 
@@ -438,6 +445,12 @@
                 }
             });
             
+            // Store current responses
+            const currentResponses = window.userResponses;
+            
+            // Clear the form
+            document.getElementById('assessment-questions').innerHTML = '';
+            
             // Update content
             const ui = translations.ui[lang];
             
@@ -454,11 +467,28 @@
             document.getElementById('weight-critical').textContent = ui.critical;
             document.getElementById('weight-triple').textContent = ui.tripleWeight;
             
+            // Update progress label
+            document.getElementById('progress-label').textContent = ui.progressLabel;
+            
             // Update buttons
             document.getElementById('calculate-btn').textContent = ui.calculateResults;
             
             // Update section titles
             document.getElementById('practice-areas-title').textContent = ui.practiceAreas;
+            
+            // Reinitialize the assessment with new language
+            window.initializeAssessment();
+            
+            // Restore previous responses
+            window.userResponses = currentResponses;
+            
+            // Update radio buttons based on stored responses
+            Object.entries(currentResponses).forEach(([questionId, optionIndex]) => {
+                const input = document.querySelector(`input[name="${questionId}"][value="${optionIndex}"]`);
+                if (input) {
+                    input.checked = true;
+                }
+            });
             document.getElementById('overall-maturity-title').textContent = ui.overallMaturity;
             document.getElementById('practice-area-title').textContent = ui.practiceAreaMaturity;
             document.getElementById('radar-title').textContent = ui.maturityRadar;
@@ -472,13 +502,28 @@
             const assessmentForm = document.getElementById('assessment-questions');
             assessmentForm.innerHTML = '';
             window.initializeAssessment();
+            
+            // If results are currently displayed, recalculate them with the new language
+            if (document.getElementById('results-container').style.display === 'block') {
+                // Destroy existing chart to prevent memory leaks
+                if (window.radarChart) {
+                    window.radarChart.destroy();
+                }
+                
+                // Calculate scores and update display
+                const results = window.calculateResults();
+                
+                // Update progress
+                window.updateProgress();
+            }
 
             // Update practice areas menu
             const practiceAreasNav = document.getElementById('practice-areas-nav');
             practiceAreasNav.innerHTML = '';
-            Object.entries(translations.practiceAreas[lang]).forEach(([area, title]) => {
+            Object.entries(translations.questionDatabase).forEach(([area, questions]) => {
                 const link = document.createElement('a');
                 link.href = `#${area}`;
+                const title = translations.practiceAreas[lang][area] || area;
                 link.className = 'nav-link' + (area === 'buildManagement' ? ' active' : '');
                 link.textContent = title;
                 practiceAreasNav.appendChild(link);
@@ -523,9 +568,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Add event listeners
             document.getElementById('calculate-btn').addEventListener('click', window.validateAndCalculate);
-            document.getElementById('restart-btn').addEventListener('click', restartAssessment);
-            document.getElementById('export-csv').addEventListener('click', exportResultsAsCsv);
-            document.getElementById('scroll-top').addEventListener('click', scrollToTop);
+            document.getElementById('restart-btn').addEventListener('click', window.restartAssessment);
+            document.getElementById('export-btn').addEventListener('click', window.exportResultsAsCsv);
+            document.getElementById('scroll-top').addEventListener('click', window.scrollToTop);
             
             // Initialize with English
             setLanguage('en_CA');
@@ -553,8 +598,8 @@
                 const inputs = question.querySelectorAll('input[type="radio"]');
                 const isAnswered = Array.from(inputs).some(input => input.checked);
                 if (!isAnswered) {
-                    const questionText = question.querySelector('h5').textContent;
-                    const area = question.closest('section').querySelector('h3').textContent;
+                    const questionText = question.querySelector('h5')?.textContent || '';
+                    const area = question.closest('.practice-area')?.querySelector('.practice-area-title h3')?.textContent || '';
                     unanswered.push({ text: questionText, area: area, element: question });
                 }
             });
@@ -767,28 +812,28 @@
             let generalRecommendation = '';
             if (overallLevel === -1) {
                 generalRecommendation = `
-                    <p>Your organization is at the <strong>${uiText.initial}</strong> level of continuous delivery maturity. 
-                    Focus on establishing basic automation and standardizing your processes.</p>
+                    <p>${uiText.recommendationPrefix} <strong>${uiText.initial}</strong> ${uiText.maturityLevelSuffix}. 
+                    ${uiText.recommendationInitial}</p>
                 `;
             } else if (overallLevel === 0) {
                 generalRecommendation = `
-                    <p>Your organization is at the <strong>${uiText.managed}</strong> level of continuous delivery maturity. 
-                    Focus on improving reliability and consistency across your delivery pipeline.</p>
+                    <p>${uiText.recommendationPrefix} <strong>${uiText.managed}</strong> ${uiText.maturityLevelSuffix}. 
+                    ${uiText.recommendationManaged}</p>
                 `;
             } else if (overallLevel === 1) {
                 generalRecommendation = `
-                    <p>Your organization is at the <strong>${uiText.defined}</strong> level of continuous delivery maturity. 
-                    Focus on enhancing monitoring, metrics, and feedback loops.</p>
+                    <p>${uiText.recommendationPrefix} <strong>${uiText.defined}</strong> ${uiText.maturityLevelSuffix}. 
+                    ${uiText.recommendationDefined}</p>
                 `;
             } else if (overallLevel === 2) {
                 generalRecommendation = `
-                    <p>Your organization is at the <strong>${uiText.measured}</strong> level of continuous delivery maturity. 
-                    Focus on optimization and predictive capabilities.</p>
+                    <p>${uiText.recommendationPrefix} <strong>${uiText.measured}</strong> ${uiText.maturityLevelSuffix}. 
+                    ${uiText.recommendationMeasured}</p>
                 `;
             } else if (overallLevel === 3) {
                 generalRecommendation = `
-                    <p>Your organization is at the <strong>${uiText.optimizing}</strong> level of continuous delivery maturity. 
-                    Focus on innovation and maintaining your excellent practices.</p>
+                    <p>${uiText.recommendationPrefix} <strong>${uiText.optimizing}</strong> ${uiText.maturityLevelSuffix}. 
+                    ${uiText.recommendationOptimizing}</p>
                 `;
             }
             
@@ -851,12 +896,12 @@
             const nextSteps = document.createElement('div');
             nextSteps.className = 'mt-4';
             nextSteps.innerHTML = `
-                <h4>Next Steps</h4>
+                <h4>${uiText.nextSteps}</h4>
                 <ol>
-                    <li>Share these results with your team and stakeholders</li>
-                    <li>Create an improvement roadmap focusing on the lowest maturity areas</li>
-                    <li>Set specific, measurable goals for each practice area</li>
-                    <li>Reassess your maturity in 3-6 months to track progress</li>
+                    <li>${uiText.shareResults}</li>
+                    <li>${uiText.createRoadmap}</li>
+                    <li>${uiText.setGoals}</li>
+                    <li>${uiText.reassess}</li>
                 </ol>
             `;
             
@@ -930,7 +975,9 @@
          * Format maturity level for display
          */
         window.formatMaturityLevel = function(level) {
-            return `Level ${level}`;
+            const currentLang = document.documentElement.lang;
+            const uiText = translations.ui[currentLang];
+            return `${uiText.level} ${level}`;
         };
         
         /**
