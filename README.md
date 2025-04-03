@@ -1,6 +1,6 @@
 # Continuous Delivery Maturity Assessment Tool
 
-A comprehensive web-based assessment tool to evaluate an organization's continuous delivery maturity across 8 key practice areas.
+A comprehensive web-based assessment tool to evaluate an organization's continuous delivery maturity across 8 key practice areas, with full support for English and French.
 
 ## Features
 
@@ -9,6 +9,10 @@ A comprehensive web-based assessment tool to evaluate an organization's continuo
 - **Visual Results**: Radar chart visualization of maturity levels
 - **CSV Export**: Export detailed results for further analysis
 - **Maturity Levels**: 5 maturity levels from Regressive (-1) to Optimizing (3)
+- **Multi-language Support**: Full English and French translations
+- **Real-time Progress**: Visual progress tracking with percentage indicator
+- **Dynamic UI**: Responsive interface with practice area navigation
+- **Smart Recommendations**: Tailored improvement suggestions based on maturity levels
 
 ## Practice Areas
 
@@ -25,22 +29,45 @@ A comprehensive web-based assessment tool to evaluate an organization's continuo
 
 1. Clone the repository
 2. Run a local web server (e.g., `python -m http.server 8000`)
-3. Open `complex_assessment.html` in your browser
-4. Complete the assessment questions
-5. View your results and export them as needed
+3. Open `index.html` in your browser
+4. Select your preferred language (EN/FR)
+5. Complete the assessment questions
+6. View your results and recommendations
+7. Export results as CSV if needed
 
 ## Technical Stack
 
 - HTML5
-- CSS3
+- CSS3 with Bootstrap 5
 - JavaScript (Vanilla)
 - Chart.js for visualization
 - No backend required - runs entirely in browser
 
-## License
+## Prompts2Use
 
-MIT License
+To recreate this application, you can use the following prompts with an AI assistant:
 
-## Contributing
+1. "Create a web-based assessment tool for evaluating continuous delivery maturity with these requirements:
+   - 8 practice areas (Build Management, Environments, Release Management, Testing, Data Management, Configuration Management, Application Architecture, Observability)
+   - 5 maturity levels from Regressive (-1) to Optimizing (3)
+   - Question weighting system (standard, important, critical)
+   - Progress tracking
+   - Results visualization with radar chart"
 
-Feel free to submit issues and enhancement requests!
+2. "Add multi-language support with these features:
+   - English and French translations for all content
+   - Language toggle button
+   - Translations for questions, recommendations, and UI elements
+   - Dynamic language switching without page reload"
+
+3. "Enhance the UI/UX with:
+   - Bootstrap 5 styling
+   - Responsive sidebar navigation
+   - Progress indicator with label
+   - Maturity level badges
+   - Smart recommendations based on assessment results"
+
+4. "Implement data management features:
+   - Local storage for responses
+   - CSV export functionality
+   - Result persistence between language switches"
