@@ -4,502 +4,728 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Continuous Delivery Maturity Assessment</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/translations.js"></script>
+    <script src="js/scoring.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
             color: #333;
+            background-color: #f8f9fa;
         }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h2 {
-            color: #3498db;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-top: 30px;
-        }
-        .practice-area {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .option {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .option:hover {
-            background-color: #f0f0f0;
-        }
-        .option.selected {
-            background-color: #d4edff;
-            border-color: #3498db;
-        }
-        .level-indicator {
-            font-weight: bold;
-            color: #3498db;
-        }
-        .description {
-            margin-top: 5px;
-        }
-        button {
-            background-color: #3498db;
+        .header {
+            background-color: #0d6efd;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .question-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-left: 5px solid #0d6efd;
+        }
+        .question-weight {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .weight-1 {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .weight-2 {
+            background-color: #cfe2ff;
+            color: #0d6efd;
+        }
+        .weight-3 {
+            background-color: #d1e7dd;
+            color: #146c43;
+        }
+
+        .recommendation-list {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 0;
+        }
+
+        .recommendation-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header {
+            background-color: #e8f0eb;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            color: #2c4a34;
+            margin-bottom: 1rem;
+        }
+        .option-label {
             display: block;
-            margin: 30px auto;
-            transition: background-color 0.3s;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        button:hover {
-            background-color: #2980b9;
+        .option-label:hover {
+            background-color: #f8f9fa;
         }
-        #results {
+        input[type="radio"]:checked + .option-label {
+            background-color: #e7f5ff;
+            border-color: #0d6efd;
+        }
+        .progress-indicator {
+            height: 8px;
+            margin-bottom: 2rem;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+        }
+        .nav-pills .nav-link {
+            color: #0d6efd;
+        }
+        .practice-area-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .practice-area-title h3 {
+            margin-bottom: 0;
+        }
+        .practice-area-badge {
+            margin-left: 1rem;
+            font-size: 0.9rem;
+        }
+        #results-container {
             display: none;
-            margin-top: 30px;
         }
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+        .results-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
         }
-        .result-card {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .result-title {
+        .maturity-level {
+            font-size: 2.5rem;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .result-level {
-            font-size: 24px;
-            font-weight: bold;
-            color: #3498db;
             text-align: center;
-            margin: 10px 0;
+            margin: 1rem 0;
         }
-        .radar-chart {
-            width: 100%;
+        .level-negative-1 { color: #dc3545; }
+        .level-0 { color: #fd7e14; }
+        .level-1 { color: #ffc107; }
+        .level-2 { color: #20c997; }
+        .level-3 { color: #198754; }
+        .radar-chart-container {
             max-width: 600px;
             margin: 0 auto;
         }
-        .overall-result {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 20px;
+        .btn-floating {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
         }
-        .action-plan {
-            background-color: #eaf7ff;
-            border-radius: 5px;
-            padding: 20px;
-            margin-top: 30px;
+
+        .highlight-question {
+            animation: highlight-pulse 2s;
         }
-        @media print {
-            button {
-                display: none;
-            }
-            .option:not(.selected) {
-                display: none;
-            }
-            #results {
-                display: block !important;
-            }
+
+        @keyframes highlight-pulse {
+            0% { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            50% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); }
+            100% { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        }
+
+        #validation-messages ul {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-left: 20px;
+        }
+
+        #validation-messages li {
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
-    <h1>Continuous Delivery Maturity Assessment</h1>
-    
-    <p>This assessment will help determine your organization's maturity level in the Continuous Delivery Maturity Model across eight key practice areas. For each practice area, select the statement that best describes your current state.</p>
-    
-    <div id="assessment">
-        <div class="practice-area" id="build-management">
-            <h2>1. Build Management & Continuous Integration</h2>
-            <p>Which statement best describes your build and integration processes?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Manual processes for building software. No management of dependencies.</div>
+    <div class="header text-center">
+        <div class="container">
+            <h1>Continuous Delivery Maturity Assessment</h1>
+            <p class="lead">Evaluate your organization's maturity across 8 key practice areas</p>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <!-- Progress Bar and Language Toggle -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="progress progress-indicator flex-grow-1 me-3">
+                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
             </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Regular automated build & testing. Any build can be re-created from source control using automated process.</div>
+            <div class="lang-toggle">
+                <button class="btn btn-outline-primary active" onclick="setLanguage('en_CA')">EN</button>
+                <button class="btn btn-outline-primary ms-2" onclick="setLanguage('fr_CA')">FR</button>
             </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Automated build & test cycle every time a change is committed. Dependencies managed. In use of scripts & tools.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Build metrics gathered, made visible, & acted on. Builds are not left broken.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Teams regularly meet to discuss integration & fix them with automation, faster feedback, & better visibility.</div>
+        </div>
+
+        <!-- Assessment Form -->
+        <div id="assessment-form">
+            <div class="row">
+                <!-- Practice Area Navigation -->
+                <div class="col-md-3 mb-4">
+                    <div class="sticky-top pt-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <span id="practice-areas-title">Practice Areas</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <nav id="practice-areas-nav" class="nav nav-pills flex-column p-3">
+                                    <!-- Practice areas will be dynamically inserted here -->
+                                </nav>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <span id="legend-title">Legend</span>
+                            </div>
+                            <div class="card-body">
+                                <div><span class="question-weight weight-1" id="weight-standard">Standard</span> <span id="weight-normal">Normal weight</span></div>
+                                <div><span class="question-weight weight-2" id="weight-important">Important</span> <span id="weight-double">Double weight</span></div>
+                                <div><span class="question-weight weight-3" id="weight-critical">Critical</span> <span id="weight-triple">Triple weight</span></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Validation Messages -->
+                        <div id="validation-messages" class="alert alert-warning d-none mt-3" role="alert">
+                            <h4 class="alert-heading mb-3"></h4>
+                            <div class="unanswered-list mb-3"></div>
+                            <button class="btn btn-warning" onclick="scrollToFirstUnanswered()"></button>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-3">
+                            <button id="calculate-btn" class="btn btn-primary" type="button" disabled></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Questions -->
+                <div class="col-md-9">
+                    <form id="assessment-questions">
+                        <!-- Practice areas and questions will be dynamically inserted here -->
+                    </form>
+                </div>
             </div>
         </div>
         
-        <div class="practice-area" id="environments">
-            <h2>2. Environments & Provisioning</h2>
-            <p>Which statement best describes your environment management and provisioning?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Manual process for deploying software. Environment-specific binaries & deployments.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Automated deployment to some environments. Creation of new environments is cheap. All configuration is externalized & versioned.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Fully automated, self service push-button process for deploying software. Same process to deploy to every environment.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Orchestrated deployments managed. Release & rollback processes tested.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">All environments managed effectively. Provisioning fully automated. Virtualization used if applicable.</div>
-            </div>
-        </div>
-        
-        <div class="practice-area" id="release-management">
-            <h2>3. Release Management & Compliance</h2>
-            <p>Which statement best describes your release management and compliance processes?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Infrequent & unreliable releases.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Painful & infrequent, but reliable releases. Limited traceability from requirements to release.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Change management & approvals processes defined & enforced. Regulatory & compliance conditions met.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Environment & application health monitored & proactively managed. Cycle time is monitored.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Operations & delivery teams regularly collaborate to manage risks & reduce cycle time.</div>
-            </div>
-        </div>
-        
-        <div class="practice-area" id="testing">
-            <h2>4. Testing</h2>
-            <p>Which statement best describes your testing practices?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Manual testing after development.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Automated tests written as part of story development.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Automated unit & acceptance tests, the latter written with testers. Testing part of the development process.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Quality metrics & trends tracked. Non-functional requirements defined & measured.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Production rollbacks rare. Defects found & fixed immediately.</div>
+        <!-- Results Container -->
+        <div id="results-container">
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <div class="results-card">
+                        <h2 class="text-center mb-4">Assessment Results</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h3 class="mb-0" id="overall-maturity-title">Overall Maturity</h3>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div id="overall-level" class="maturity-level">Level 0</div>
+                                        <p id="overall-description" class="mb-0">Basic automation with some manual processes</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="mb-0" id="practice-area-title">Practice Area Maturity</h3>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <ul id="area-results" class="list-group list-group-flush">
+                                            <!-- Area results will be inserted here -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="mb-0" id="radar-title">Maturity Radar</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="radar-chart-container">
+                                            <canvas id="radar-chart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="mb-0" id="recommendations-title">Recommended Actions</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="recommendations">
+                                            <!-- Recommendations will be inserted here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center mt-4">
+                            <button id="export-csv" class="btn btn-success me-2">Export as CSV</button>
+                            <button id="restart-btn" class="btn btn-secondary">Start Over</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="practice-area" id="data-management">
-            <h2>5. Data Management</h2>
-            <p>Which statement best describes your data management practices?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Data migrations performed manually.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Changes to databases done with automated scripts versioned with application.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Database changes performed automated as part of deployment process.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Database upgrades & rollbacks tested with every deployment. Database performance monitored & optimized.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Release to release faithful copy of database performance & deployment process.</div>
-            </div>
-        </div>
-        
-        <div class="practice-area" id="configuration-management">
-            <h2>6. Configuration Management</h2>
-            <p>Which statement best describes your configuration management practices?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Version control either not used, or check-ins happen infrequently.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Version control in use for everything required to recreate software: source code, configuration, build & deploy scripts, data migrations.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Libraries & dependencies managed. Version control branching strategies determined by change management process.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Developers check in to mainline at least once a day. Mainline only used for releases.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Regular updates to CM policy supports effective collaboration, feature development, & auditable change management processes.</div>
-            </div>
-        </div>
-        
-        <div class="practice-area" id="application">
-            <h2>7. Application</h2>
-            <p>Which statement best describes your application architecture?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Monolithic sites, messy config, everything connects to everything, fragile and/or unclear dependencies.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Non-monolithic sites (system components are separate applications), almost no overlap of runtime is required between components.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Multi-server with shared storage system for shared components. Unestablished sessions, horizontal scaling & application layer.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Session management, robust failure state management, partially decoupled components from application (e.g. CDN), multi-region storage, & feature flags.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Technical, automated service discovery, no shared file system required for component sharing (full CDN integration), apps are directly tied to data sources.</div>
-            </div>
-        </div>
-        
-        <div class="practice-area" id="observability">
-            <h2>8. Observability</h2>
-            <p>Which statement best describes your observability practices?</p>
-            
-            <div class="option" data-level="-1" onclick="selectOption(this)">
-                <div class="level-indicator">Level -1:</div>
-                <div class="description">Human feedback is the primary source of detection.</div>
-            </div>
-            
-            <div class="option" data-level="0" onclick="selectOption(this)">
-                <div class="level-indicator">Level 0:</div>
-                <div class="description">Local log files, SSH loop scripts to view/collect metrics, DevOps alerting manually added servers, inconsistent retention of logs & metrics.</div>
-            </div>
-            
-            <div class="option" data-level="1" onclick="selectOption(this)">
-                <div class="level-indicator">Level 1:</div>
-                <div class="description">Centralized log files, agent-based monitoring, manual alert configuration, manual addition & removal of servers.</div>
-            </div>
-            
-            <div class="option" data-level="2" onclick="selectOption(this)">
-                <div class="level-indicator">Level 2:</div>
-                <div class="description">Automatic environment detection, no manual decoupled components from adding/removing agents, log files (improved over messages as data, can be CDN), multi-region storage, & feature flags.</div>
-            </div>
-            
-            <div class="option" data-level="3" onclick="selectOption(this)">
-                <div class="level-indicator">Level 3:</div>
-                <div class="description">Automatic error detection, environment analysis tools, self-correction.</div>
-            </div>
-        </div>
-        
-        <button onclick="calculateResults()">Calculate Results</button>
     </div>
     
-    <div id="results">
-        <h2>Assessment Results</h2>
-        
-        <div class="overall-result">
-            <p>Your overall maturity level: <span id="overall-level"></span></p>
-        </div>
-        
-        <div class="results-grid" id="results-grid"></div>
-        
-        <div class="radar-chart">
-            <canvas id="maturityChart"></canvas>
-        </div>
-        
-        <div class="action-plan">
-            <h2>Recommended Action Plan</h2>
-            <div id="action-plan-content"></div>
-        </div>
-        
-        <button onclick="printResults()">Print Results</button>
-        <button onclick="resetAssessment()">Start Over</button>
-    </div>
-    
+    <!-- Floating scroll to top button -->
+    <button id="scroll-top" class="btn btn-primary btn-floating d-none">
+        <i class="bi bi-arrow-up"></i> Top
+    </button>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/scoring.js"></script>
     <script>
-        let practiceAreas = [
-            { id: 'build-management', name: 'Build Management & CI', level: null },
-            { id: 'environments', name: 'Environments & Provisioning', level: null },
-            { id: 'release-management', name: 'Release Management & Compliance', level: null },
-            { id: 'testing', name: 'Testing', level: null },
-            { id: 'data-management', name: 'Data Management', level: null },
-            { id: 'configuration-management', name: 'Configuration Management', level: null },
-            { id: 'application', name: 'Application', level: null },
-            { id: 'observability', name: 'Observability', level: null }
-        ];
-        
-        let chart = null;
-        
-        function selectOption(element) {
-            // Remove selected class from siblings
-            let parent = element.parentElement;
-            let options = parent.querySelectorAll('.option');
-            options.forEach(option => {
-                option.classList.remove('selected');
+        // Global variables
+        window.userResponses = {};
+        window.totalQuestions = 0;
+        window.answeredQuestions = 0;
+        window.currentResults = null;
+        window.currentChartData = null;
+
+        /**
+         * Initialize the assessment by generating questions from the database
+         */
+        window.initializeAssessment = function() {
+            const form = document.getElementById('assessment-questions');
+            const currentLang = document.documentElement.lang;
+            
+            // Count total questions
+            window.totalQuestions = 0;
+            Object.values(translations.questionDatabase).forEach(questions => {
+                window.totalQuestions += questions.length;
             });
             
-            // Add selected class to clicked option
-            element.classList.add('selected');
+            // Generate questions for each practice area
+            Object.entries(translations.questionDatabase).forEach(([area, questions]) => {
+                // Create section for this practice area
+                const section = document.createElement('div');
+                section.id = area;
+                section.className = 'mb-5';
+                
+                // Get the practice area title from translations or fallback to formatted area name
+                const areaTitle = translations.practiceAreas?.[currentLang]?.[area.replace('-', '')] || 
+                    area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                
+                // Add practice area header
+                section.innerHTML = `
+                    <div class="practice-area-title">
+                        <h3>${areaTitle}</h3>
+                        <span class="badge bg-primary practice-area-badge">${questions.length} ${translations[currentLang]?.questions || 'Questions'}</span>
+                    </div>
+                    <hr>
+                `;
+                
+                // Add questions for this practice area
+                questions.forEach(question => {
+                    const questionCard = document.createElement('div');
+                    questionCard.className = 'question-card';
+                    
+                    // Determine weight class and text
+                    let weightClass = '';
+                    let weightText = '';
+                    
+                    if (question.weight === 1) {
+                        weightClass = 'weight-1';
+                        weightText = translations.ui[currentLang].standard;
+                    } else if (question.weight === 2) {
+                        weightClass = 'weight-2';
+                        weightText = translations.ui[currentLang].important;
+                    } else if (question.weight === 3) {
+                        weightClass = 'weight-3';
+                        weightText = translations.ui[currentLang].critical;
+                    }
+                    
+                    // Add question header
+                    const questionText = translations.questions?.[currentLang]?.[area]?.[question.id]?.text || question.text;
+                    questionCard.innerHTML = `
+                        <div class="mb-3">
+                            <h5>${questionText} <span class="question-weight ${weightClass}">${weightText}</span></h5>
+                        </div>
+                    `;
+                    
+                    // Add options for this question
+                    const optionsContainer = document.createElement('div');
+                    
+                    question.options.forEach((option, index) => {
+                        const optionId = `${question.id}_option_${index}`;
+                        
+                        const optionDiv = document.createElement('div');
+                        optionDiv.className = 'form-check';
+                        const optionText = translations.questions?.[currentLang]?.[area]?.[question.id]?.options?.[index] || option.text;
+                        const maturityLevel = translations[currentLang]?.results?.maturityLevels?.[option.value] || option.value;
+                        optionDiv.innerHTML = `
+                            <input class="form-check-input visually-hidden" type="radio" name="${question.id}" id="${optionId}" value="${index}">
+                            <label class="option-label" for="${optionId}">
+                                <div class="d-flex justify-content-between">
+                                    <span>${optionText}</span>
+                                    <span class="badge ${window.getMaturityBadgeClass(option.value)}">${maturityLevel}</span>
+                                </div>
+                            </label>
+                        `;
+                        
+                        // Add event listener for this option
+                        optionDiv.querySelector('input').addEventListener('change', function() {
+                            window.handleQuestionResponse(question.id, index);
+                        });
+                        
+                        optionsContainer.appendChild(optionDiv);
+                    });
+                    
+                    questionCard.appendChild(optionsContainer);
+                    section.appendChild(questionCard);
+                });
+                
+                form.appendChild(section);
+            });
         }
-        
-        function calculateResults() {
-            // Collect selected options
-            practiceAreas.forEach(area => {
-                let selectedOption = document.querySelector(`#${area.id} .option.selected`);
-                if (selectedOption) {
-                    area.level = parseInt(selectedOption.getAttribute('data-level'));
-                } else {
-                    area.level = null;
+
+        /**
+         * Handle when a user selects an answer to a question
+         */
+        window.handleQuestionResponse = function(questionId, optionIndex) {
+            // Store the response
+            window.userResponses[questionId] = optionIndex;
+            
+            // Update progress
+            window.updateProgress();
+        };
+
+        // Language toggle function
+        window.setLanguage = function(lang) {
+            // Update HTML lang attribute
+            document.documentElement.lang = lang;
+            
+            // Update active button
+            document.querySelectorAll('.lang-toggle .btn').forEach(btn => {
+                btn.classList.remove('active');
+                if ((lang === 'en_CA' && btn.textContent === 'EN') ||
+                    (lang === 'fr_CA' && btn.textContent === 'FR')) {
+                    btn.classList.add('active');
                 }
             });
             
-            // Check if all areas have been answered
-            let unansweredAreas = practiceAreas.filter(area => area.level === null);
-            if (unansweredAreas.length > 0) {
-                let areaNames = unansweredAreas.map(area => area.name).join(', ');
-                alert(`Please complete all sections before calculating results. Missing: ${areaNames}`);
-                return;
-            }
+            // Update content
+            const ui = translations.ui[lang];
             
-            // Calculate overall level (lowest level across all areas)
-            let overallLevel = Math.min(...practiceAreas.map(area => area.level));
+            // Update header
+            document.querySelector('h1').textContent = translations[lang].title;
+            document.querySelector('.lead').textContent = translations[lang].subtitle;
+            
+            // Update legend
+            document.getElementById('legend-title').textContent = ui.legend;
+            document.getElementById('weight-standard').textContent = ui.standard;
+            document.getElementById('weight-normal').textContent = ui.normalWeight;
+            document.getElementById('weight-important').textContent = ui.important;
+            document.getElementById('weight-double').textContent = ui.doubleWeight;
+            document.getElementById('weight-critical').textContent = ui.critical;
+            document.getElementById('weight-triple').textContent = ui.tripleWeight;
+            
+            // Update buttons
+            document.getElementById('calculate-btn').textContent = ui.calculateResults;
+            
+            // Update section titles
+            document.getElementById('practice-areas-title').textContent = ui.practiceAreas;
+            document.getElementById('overall-maturity-title').textContent = ui.overallMaturity;
+            document.getElementById('practice-area-title').textContent = ui.practiceAreaMaturity;
+            document.getElementById('radar-title').textContent = ui.maturityRadar;
+            document.getElementById('recommendations-title').textContent = ui.recommendedActions;
+            
+            // Update scroll to top button text
+            const scrollTopBtn = document.getElementById('scroll-top');
+            scrollTopBtn.innerHTML = `<i class="bi bi-arrow-up"></i> ${translations.ui[lang].scrollToTop}`;
+
+            // Clear and reinitialize the assessment form
+            const assessmentForm = document.getElementById('assessment-questions');
+            assessmentForm.innerHTML = '';
+            window.initializeAssessment();
+
+            // Update practice areas menu
+            const practiceAreasNav = document.getElementById('practice-areas-nav');
+            practiceAreasNav.innerHTML = '';
+            Object.entries(translations.practiceAreas[lang]).forEach(([area, title]) => {
+                const link = document.createElement('a');
+                link.href = `#${area}`;
+                link.className = 'nav-link' + (area === 'buildManagement' ? ' active' : '');
+                link.textContent = title;
+                practiceAreasNav.appendChild(link);
+
+                // Add click handler
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    document.querySelectorAll('#practice-areas-nav .nav-link').forEach(l => {
+                        l.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Scroll to the target section
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+            
+            // Reinitialize the assessment to update all questions and options
+            const form = document.getElementById('assessment-questions');
+            form.innerHTML = '';
+            initializeAssessment();
+            
+            // Update results if they're visible
+            if (document.getElementById('results-container').style.display === 'block' && window.currentResults) {
+                displayResults(window.currentResults, window.currentChartData);
+            }
+        };
+        
+        // Initialize when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners
+            document.getElementById('calculate-btn').addEventListener('click', window.validateAndCalculate);
+            document.getElementById('restart-btn').addEventListener('click', restartAssessment);
+            document.getElementById('export-csv').addEventListener('click', exportResultsAsCsv);
+            document.getElementById('scroll-top').addEventListener('click', scrollToTop);
+            
+            // Initialize with English
+            setLanguage('en_CA');
+        });
+
+        // Handle scroll to top button
+        window.addEventListener('scroll', function() {
+            const scrollTopBtn = document.getElementById('scroll-top');
+            if (window.scrollY > 300) {
+                scrollTopBtn.classList.remove('d-none');
+            } else {
+                scrollTopBtn.classList.add('d-none');
+            }
+        });
+    </script>
+    <script>
+        /**
+         * Get list of unanswered questions in the assessment
+         */
+        window.getUnansweredQuestions = function() {
+            const questions = document.querySelectorAll('.question-card');
+            const unanswered = [];
+            
+            questions.forEach(question => {
+                const inputs = question.querySelectorAll('input[type="radio"]');
+                const isAnswered = Array.from(inputs).some(input => input.checked);
+                if (!isAnswered) {
+                    const questionText = question.querySelector('h5').textContent;
+                    const area = question.closest('section').querySelector('h3').textContent;
+                    unanswered.push({ text: questionText, area: area, element: question });
+                }
+            });
+            
+            return unanswered;
+        };
+
+        /**
+         * Validate all questions are answered before calculating results
+         */
+        window.validateAndCalculate = function() {
+            const unanswered = window.getUnansweredQuestions();
+            const validationMessages = document.getElementById('validation-messages');
+            const currentLang = document.documentElement.lang;
+            
+            if (unanswered.length > 0) {
+                // Show validation message
+                validationMessages.classList.remove('d-none');
+                validationMessages.querySelector('.alert-heading').textContent = 
+                    translations[currentLang].validation.incomplete;
+                
+                // Create list of unanswered questions
+                const list = document.createElement('ul');
+                list.className = 'mb-0';
+                unanswered.forEach(q => {
+                    const li = document.createElement('li');
+                    li.textContent = `${q.area}: ${q.text}`;
+                    list.appendChild(li);
+                });
+                
+                const listContainer = validationMessages.querySelector('.unanswered-list');
+                listContainer.innerHTML = `<strong>${translations[currentLang].validation.unansweredQuestions}</strong>`;
+                listContainer.appendChild(list);
+                
+                // Update scroll button text
+                validationMessages.querySelector('button').textContent = 
+                    translations[currentLang].validation.scrollTo;
+                
+                // Scroll to validation message
+                validationMessages.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                window.calculateResults();
+            }
+        };
+
+        /**
+         * Scroll to the first unanswered question
+         */
+        window.scrollToFirstUnanswered = function() {
+            const unanswered = getUnansweredQuestions();
+            if (unanswered.length > 0) {
+                unanswered[0].element.scrollIntoView({ behavior: 'smooth' });
+                // Add a temporary highlight effect
+                unanswered[0].element.classList.add('highlight-question');
+                setTimeout(() => {
+                    unanswered[0].element.classList.remove('highlight-question');
+                }, 2000);
+            }
+        };
+        
+        /**
+         * Update the progress bar and enable/disable the calculate button
+         */
+        window.updateProgress = function() {
+            // Count answered questions
+            window.answeredQuestions = Object.keys(window.userResponses).length;
+            
+            // Update progress bar
+            const progressPercentage = Math.round((window.answeredQuestions / window.totalQuestions) * 100);
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${progressPercentage}%`;
+            progressBar.setAttribute('aria-valuenow', progressPercentage);
+            progressBar.textContent = `${progressPercentage}%`;
+            
+            // Enable calculate button if at least 50% of questions are answered
+            const calculateBtn = document.getElementById('calculate-btn');
+            if (progressPercentage >= 50) {
+                calculateBtn.disabled = false;
+            } else {
+                calculateBtn.disabled = true;
+            }
+        };
+        
+        /**
+         * Calculate and display assessment results
+         */
+        window.calculateResults = function() {
+            // Calculate scores
+            const results = window.calculateScores(window.userResponses, translations.questionDatabase);
+            
+            // Generate radar chart data
+            const chartData = window.generateRadarChartData(results);
             
             // Display results
-            document.getElementById('assessment').style.display = 'none';
-            document.getElementById('results').style.display = 'block';
-            document.getElementById('overall-level').textContent = formatLevel(overallLevel);
+            window.displayResults(results, chartData);
             
-            // Create result cards
-            let resultsGrid = document.getElementById('results-grid');
-            resultsGrid.innerHTML = '';
+            // Hide assessment form and show results
+            document.getElementById('assessment-form').style.display = 'none';
+            document.getElementById('results-container').style.display = 'block';
             
-            practiceAreas.forEach(area => {
-                let card = document.createElement('div');
-                card.className = 'result-card';
-                card.innerHTML = `
-                    <div class="result-title">${area.name}</div>
-                    <div class="result-level">${formatLevel(area.level)}</div>
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        
+        /**
+         * Display the assessment results
+         */
+        window.displayResults = function(results, chartData) {
+            const lang = document.documentElement.lang;
+            const ui = translations.ui[lang];
+            
+            // Update title
+            document.querySelector('#results-container h2').textContent = ui.resultsTitle;
+            
+            // Display overall maturity level
+            const overallLevel = results.overall.maturityLevel;
+            document.getElementById('overall-level').textContent = window.formatMaturityLevel(overallLevel);
+            document.getElementById('overall-level').className = `maturity-level level-${overallLevel}`;
+            document.getElementById('overall-description').textContent = window.getMaturityDescription(overallLevel);
+            
+            // Display practice area results
+            const areaResultsList = document.getElementById('area-results');
+            areaResultsList.innerHTML = '';
+            
+            Object.entries(results).forEach(([area, result]) => {
+                if (area === 'overall') return;
+                
+                // Get translated practice area name
+                const areaTitle = translations.practiceAreas[lang][area] || area
+                    .replace(/([A-Z])/g, ' $1')
+                    .replace(/^./, str => str.toUpperCase());
+                
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    <span>${areaTitle}</span>
+                    <span class="badge ${window.getMaturityBadgeClass(result.maturityLevel)} rounded-pill">${window.formatMaturityLevel(result.maturityLevel)}</span>
                 `;
-                resultsGrid.appendChild(card);
+                
+                areaResultsList.appendChild(listItem);
             });
             
             // Create radar chart
-            createRadarChart();
+            window.createRadarChart(chartData);
             
-            // Generate action plan
-            generateActionPlan(overallLevel);
-        }
-        
-        function formatLevel(level) {
-            return level >= 0 ? `Level ${level}` : `Level ${level}`;
-        }
-        
-        function createRadarChart() {
-            const ctx = document.getElementById('maturityChart').getContext('2d');
+            // Generate recommendations
+            window.generateRecommendations(results);
             
-            // If chart exists, destroy it
-            if (chart) {
-                chart.destroy();
+            // Update buttons
+            document.getElementById('export-btn').textContent = ui.exportCsv;
+            document.getElementById('restart-btn').textContent = ui.restart;
+        };
+        
+        /**
+         * Create the radar chart visualization
+         */
+        // Store the chart instance
+        window.radarChart = null;
+
+        window.createRadarChart = function(chartData) {
+            const ctx = document.getElementById('radar-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.radarChart) {
+                window.radarChart.destroy();
             }
             
-            // Adjust levels to be positive for chart display (add 1 to all values)
-            const adjustedLevels = practiceAreas.map(area => area.level + 1);
-            
-            chart = new Chart(ctx, {
+            // Create new chart
+            window.radarChart = new Chart(ctx, {
                 type: 'radar',
-                data: {
-                    labels: practiceAreas.map(area => area.name),
-                    datasets: [{
-                        label: 'Maturity Level',
-                        data: adjustedLevels,
-                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                        borderColor: 'rgba(52, 152, 219, 1)',
-                        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
-                    }]
-                },
+                data: chartData,
                 options: {
                     scales: {
                         r: {
@@ -507,7 +733,7 @@
                                 display: true
                             },
                             suggestedMin: 0,
-                            suggestedMax: 4,
+                            suggestedMax: 5,
                             ticks: {
                                 stepSize: 1,
                                 callback: function(value) {
@@ -515,70 +741,245 @@
                                 }
                             }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
                     }
                 }
             });
-        }
+        };
         
-        function generateActionPlan(overallLevel) {
-            let actionPlanContent = document.getElementById('action-plan-content');
+        /**
+         * Generate recommendations based on assessment results
+         */
+        window.generateRecommendations = function(results) {
+            const recommendationsContainer = document.getElementById('recommendations');
+            const overallLevel = results.overall.maturityLevel;
+            const currentLang = document.documentElement.lang;
+            const uiText = translations.ui[currentLang];
             
-            // Sort practice areas by level (ascending)
-            let sortedAreas = [...practiceAreas].sort((a, b) => a.level - b.level);
+            // Clear previous recommendations
+            recommendationsContainer.innerHTML = '';
             
-            let html = '<p>Based on your assessment results, here is a recommended action plan:</p><ol>';
-            
-            // Focus on lowest areas first
-            html += '<li><strong>Address your most critical constraints:</strong><ul>';
-            sortedAreas.filter(area => area.level === overallLevel).forEach(area => {
-                html += `<li>Improve ${area.name} to at least Level ${area.level + 1}</li>`;
-            });
-            html += '</ul></li>';
-            
-            // General recommendations based on overall level
-            if (overallLevel < 0) {
-                html += '<li><strong>Establish basic automation:</strong> Focus on implementing version control and basic build automation.</li>';
+            // General recommendation based on overall level
+            let generalRecommendation = '';
+            if (overallLevel === -1) {
+                generalRecommendation = `
+                    <p>Your organization is at the <strong>${uiText.initial}</strong> level of continuous delivery maturity. 
+                    Focus on establishing basic automation and standardizing your processes.</p>
+                `;
             } else if (overallLevel === 0) {
-                html += '<li><strong>Improve reliability:</strong> Implement consistent automated testing and deployment processes.</li>';
+                generalRecommendation = `
+                    <p>Your organization is at the <strong>${uiText.managed}</strong> level of continuous delivery maturity. 
+                    Focus on improving reliability and consistency across your delivery pipeline.</p>
+                `;
             } else if (overallLevel === 1) {
-                html += '<li><strong>Enhance monitoring and metrics:</strong> Start measuring performance and quality metrics to drive improvements.</li>';
+                generalRecommendation = `
+                    <p>Your organization is at the <strong>${uiText.defined}</strong> level of continuous delivery maturity. 
+                    Focus on enhancing monitoring, metrics, and feedback loops.</p>
+                `;
             } else if (overallLevel === 2) {
-                html += '<li><strong>Optimize collaboration:</strong> Focus on improving team collaboration and reducing cycle time.</li>';
+                generalRecommendation = `
+                    <p>Your organization is at the <strong>${uiText.measured}</strong> level of continuous delivery maturity. 
+                    Focus on optimization and predictive capabilities.</p>
+                `;
+            } else if (overallLevel === 3) {
+                generalRecommendation = `
+                    <p>Your organization is at the <strong>${uiText.optimizing}</strong> level of continuous delivery maturity. 
+                    Focus on innovation and maintaining your excellent practices.</p>
+                `;
             }
             
-            // Next steps for all areas
-            html += '<li><strong>Incremental improvements for each practice area:</strong><ul>';
-            practiceAreas.forEach(area => {
-                if (area.level < 3) {
-                    html += `<li>${area.name}: Move from ${formatLevel(area.level)} to ${formatLevel(area.level + 1)}</li>`;
+            recommendationsContainer.innerHTML = generalRecommendation;
+            
+            // Sort practice areas by maturity level (ascending)
+            const practiceAreas = Object.entries(results)
+                .filter(([area]) => area !== 'overall')
+                .sort((a, b) => a[1].maturityLevel - b[1].maturityLevel);
+            
+            // Create sections for different maturity levels
+            const sections = {
+                needsImprovement: { title: uiText.needsImprovement, items: [] },
+                developing: { title: uiText.developing, items: [] },
+                strong: { title: uiText.strong, items: [] }
+            };
+            
+            // Categorize practice areas
+            practiceAreas.forEach(([area, result]) => {
+                const areaTitle = translations.practiceAreas[currentLang][area.replace('-', '')] || 
+                    area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                
+                const listItem = document.createElement('li');
+                listItem.className = 'recommendation-card';
+                const recommendations = window.getAreaRecommendation(area, result.maturityLevel);
+                listItem.innerHTML = `
+                    <h4>${areaTitle} <span class="badge ${window.getMaturityBadgeClass(result.maturityLevel)}">${window.formatMaturityLevel(result.maturityLevel)}</span></h4>
+                    <ul class="recommendation-list">
+                        ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                `;
+                
+                // Categorize based on maturity level
+                if (result.maturityLevel <= 0) {
+                    sections.needsImprovement.items.push(listItem);
+                } else if (result.maturityLevel <= 1) {
+                    sections.developing.items.push(listItem);
+                } else {
+                    sections.strong.items.push(listItem);
                 }
             });
-            html += '</ul></li>';
             
-            html += '</ol>';
-            
-            actionPlanContent.innerHTML = html;
-        }
-        
-        function printResults() {
-            window.print();
-        }
-        
-        function resetAssessment() {
-            // Clear all selections
-            document.querySelectorAll('.option').forEach(option => {
-                option.classList.remove('selected');
+            // Add sections to recommendations container
+            Object.values(sections).forEach(section => {
+                if (section.items.length > 0) {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'mb-4';
+                    sectionDiv.innerHTML = `<h3 class="mb-3 section-header">${section.title}</h3>`;
+                    
+                    const sectionList = document.createElement('ul');
+                    sectionList.className = 'list-unstyled';
+                    section.items.forEach(item => sectionList.appendChild(item));
+                    
+                    sectionDiv.appendChild(sectionList);
+                    recommendationsContainer.appendChild(sectionDiv);
+                }
             });
             
-            // Reset practice area levels
-            practiceAreas.forEach(area => {
-                area.level = null;
+            // Add next steps section
+            const nextSteps = document.createElement('div');
+            nextSteps.className = 'mt-4';
+            nextSteps.innerHTML = `
+                <h4>Next Steps</h4>
+                <ol>
+                    <li>Share these results with your team and stakeholders</li>
+                    <li>Create an improvement roadmap focusing on the lowest maturity areas</li>
+                    <li>Set specific, measurable goals for each practice area</li>
+                    <li>Reassess your maturity in 3-6 months to track progress</li>
+                </ol>
+            `;
+            
+            recommendationsContainer.appendChild(nextSteps);
+        }
+        
+        /**
+         * Export assessment results as CSV
+         */
+        window.exportResultsAsCsv = function() {
+            // Calculate results again to ensure we have the latest data
+            const results = window.calculateScores(window.userResponses, translations.questionDatabase);
+            
+            // Generate CSV content
+            const csvContent = window.generateCsvExport(window.userResponses, results, translations.questionDatabase);
+            
+            // Create a blob with the CSV content
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            
+            // Create a download link and trigger the download
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'continuous_delivery_maturity_assessment.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+        
+        /**
+         * Restart the assessment
+         */
+        window.restartAssessment = function() {
+            // Clear responses
+            window.userResponses = {};
+            window.answeredQuestions = 0;
+            
+            // Reset all radio buttons
+            document.querySelectorAll('input[type="radio"]').forEach(input => {
+                input.checked = false;
             });
             
-            // Show assessment, hide results
-            document.getElementById('assessment').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
+            // Reset progress bar
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', 0);
+            progressBar.textContent = '0%';
+            
+            // Disable calculate button
+            document.getElementById('calculate-btn').disabled = true;
+            
+            // Show assessment form and hide results
+            document.getElementById('assessment-form').style.display = 'block';
+            document.getElementById('results-container').style.display = 'none';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        
+        /**
+         * Scroll to the top of the page
+         */
+        window.scrollToTop = function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        
+        /**
+         * Format maturity level for display
+         */
+        window.formatMaturityLevel = function(level) {
+            return `Level ${level}`;
+        };
+        
+        /**
+         * Get the CSS class for a maturity level badge
+         */
+        window.getMaturityBadgeClass = function(level) {
+            if (level === -1) return 'bg-danger';
+            if (level === 0) return 'bg-warning text-dark';
+            if (level === 1) return 'bg-info text-dark';
+            if (level === 2) return 'bg-primary';
+            if (level === 3) return 'bg-success';
+            return 'bg-secondary';
+        };
+        
+        /**
+         * Get description for a maturity level
+         */
+        window.getMaturityDescription = function(level) {
+            const currentLang = document.documentElement.lang;
+            const uiText = translations.ui[currentLang];
+            switch (level) {
+                case 0:
+                    return uiText.initial;
+                case 1:
+                    return uiText.managed;
+                case 2:
+                    return uiText.defined;
+                case 3:
+                    return uiText.measured;
+                case 4:
+                    return uiText.optimizing;
+                default:
+                    return 'Unknown';
+            }
+        };
+        
+        /**
+         * Get recommendation for a specific practice area and maturity level
+         */
+        window.getAreaRecommendation = function(area, level) {
+            const currentLang = document.documentElement.lang;
+            const nextLevel = Math.min(level + 1, 3);
+            try {
+                return translations.recommendations?.[currentLang]?.[area]?.[`${level}_${nextLevel}`] || [];
+            } catch (e) {
+                console.warn(`No recommendations found for ${area} level ${level} to ${nextLevel}`);
+                return '';
+            }
+        };
     </script>
 </body>
 </html>
