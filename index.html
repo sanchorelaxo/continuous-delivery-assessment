@@ -353,10 +353,12 @@
     <script>
         // Global variables
         window.userResponses = {};
-        window.totalQuestions = 0;
         window.answeredQuestions = 0;
         window.currentResults = null;
         window.currentChartData = null;
+        
+        // Initialize totalQuestions
+        window.totalQuestions = Object.values(translations.questionDatabase).reduce((total, questions) => total + questions.length, 0);
 
         /**
          * Initialize the assessment by generating questions from the database
@@ -365,11 +367,7 @@
             const form = document.getElementById('assessment-questions');
             const currentLang = document.documentElement.lang;
             
-            // Count total questions
-            window.totalQuestions = 0;
-            Object.values(translations.questionDatabase).forEach(questions => {
-                window.totalQuestions += questions.length;
-            });
+            // Total questions is already initialized
             
             // Generate questions for each practice area
             Object.entries(translations.questionDatabase).forEach(([area, questions]) => {
