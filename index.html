@@ -240,7 +240,7 @@
             <div class="row">
                 <div class="col-md-12 mb-4">
                     <div class="results-card">
-                        <h2 class="text-center mb-4">Assessment Results</h2>
+                        <h2 class="text-center mb-4" id="results-title">Assessment Results</h2>
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -295,6 +295,10 @@
                             </div>
                         </div>
                         
+                        <div class="mt-4">
+                            <p class="text-muted small" id="scoring-explanation"></p>
+                        </div>
+
                         <div class="d-flex justify-content-center mt-4">
                             <button id="export-btn" class="btn btn-success me-2">Export as CSV</button>
                             <button id="restart-btn" class="btn btn-secondary">Start Over</button>
@@ -503,6 +507,7 @@
             document.getElementById('practice-area-title').textContent = ui.practiceAreaMaturity;
             document.getElementById('radar-title').textContent = ui.maturityRadar;
             document.getElementById('recommendations-title').textContent = ui.recommendedActions;
+            document.getElementById('scoring-explanation').innerHTML = ui.scoringExplanation;
             
             // Update scroll to top button text
             const scrollTopBtn = document.getElementById('scroll-top');
