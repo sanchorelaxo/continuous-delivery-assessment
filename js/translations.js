@@ -532,7 +532,7 @@ window.translations = {
                 ]
             }
         ],
-        application: [
+        applicationArchitecture: [
             {
                 id: "APP1",
                 text: "Application Architecture",
@@ -683,68 +683,6 @@ window.translations = {
     },
     questions: {
         fr_CA: {
-            application: {
-                APP1: {
-                    text: "Couplage des Composants",
-                    options: [
-                        "Monolithe fortement couplé",
-                        "Monolithe modulaire avec frontières claires",
-                        "Architecture orientée services avec interfaces définies",
-                        "Microservices avec couplage faible",
-                        "Architecture événementielle avec découplage complet"
-                    ]
-                },
-                APP2: {
-                    text: "Conception d'API",
-                    options: [
-                        "Pas de conception formelle d'API",
-                        "APIs REST basiques",
-                        "APIs RESTful avec documentation",
-                        "Conception API-first avec versioning",
-                        "Passerelle API complète avec gestion"
-                    ]
-                },
-                APP3: {
-                    text: "Conception de l'évolutivité",
-                    options: [
-                        "Pas de considération d'évolutivité",
-                        "Mise à l'échelle horizontale basique",
-                        "Conception de système distribué",
-                        "Architecture cloud-native",
-                        "Auto-scaling avec analytique prédictive"
-                    ]
-                },
-                APP4: {
-                    text: "Modèles de Résilience",
-                    options: [
-                        "Pas de modèles de résilience",
-                        "Gestion d'erreurs basique",
-                        "Disjoncteurs et réessais",
-                        "Tolérance aux pannes complète",
-                        "Architecture auto-réparante"
-                    ]
-                },
-                APP5: {
-                    text: "Architecture de Sécurité",
-                    options: [
-                        "Contrôles de sécurité basiques",
-                        "Modèles de sécurité standard",
-                        "Implémentation de la sécurité by design",
-                        "Architecture zero-trust",
-                        "Architecture de sécurité basée sur l'IA"
-                    ]
-                },
-                APP6: {
-                    text: "Gestion de la Dette Technique",
-                    options: [
-                        "Pas de suivi de la dette technique",
-                        "Gestion ad-hoc de la dette technique",
-                        "Évaluation régulière de la dette technique",
-                        "Prévention proactive de la dette technique",
-                        "Optimisation continue de l'architecture"
-                    ]
-                }
-            },
             buildManagement: {
                 BM1: {
                     text: "Implémentation du Contrôle de Version",
@@ -1117,68 +1055,7 @@ window.translations = {
                     ]
                 }
             },
-            application: {
-                APP1: {
-                    text: "Architecture Applicative",
-                    options: [
-                        "Architecture monolithique",
-                        "Architecture modulaire basique",
-                        "Architecture microservices",
-                        "Architecture cloud-native",
-                        "Architecture auto-adaptative"
-                    ]
-                },
-                APP2: {
-                    text: "Indépendance des Déploiements",
-                    options: [
-                        "Déploiements couplés",
-                        "Isolation basique des déploiements",
-                        "Déploiements indépendants des services",
-                        "Déploiements sans interruption",
-                        "Cycle de vie autonome des services"
-                    ]
-                },
-                APP3: {
-                    text: "Conception des API",
-                    options: [
-                        "Pas de standards API",
-                        "Documentation API basique",
-                        "Principes REST API",
-                        "Versionnement API et rétrocompatibilité",
-                        "Conception API-first avec tests de contrat"
-                    ]
-                },
-                APP4: {
-                    text: "Scalabilité",
-                    options: [
-                        "Pas de considérations de scalabilité",
-                        "Scaling vertical basique",
-                        "Scaling horizontal avec équilibrage",
-                        "Auto-scaling avec optimisation",
-                        "Scaling prédictif avec IA/ML"
-                    ]
-                },
-                APP5: {
-                    text: "Résilience",
-                    options: [
-                        "Pas de patterns de résilience",
-                        "Gestion d'erreurs basique",
-                        "Disjoncteurs et replis",
-                        "Patterns avancés de résilience",
-                        "Architecture auto-réparante"
-                    ]
-                },
-                APP6: {
-                    text: "Dette Technique",
-                    options: [
-                        "Dette technique non gérée",
-                        "Suivi basique de la dette technique",
-                        "Réduction régulière de la dette",
-                        "Gestion proactive de la dette",
-                        "Architecture sans dette technique"
-                    ]
-                }
-            },
+
             observability: {
                 OBS1: {
                     text: "Monitoring et Alertes",
@@ -1651,7 +1528,7 @@ window.translations = {
                     ]
                 }
             },
-            application: {
+            applicationArchitecture: {
                 APP1: {
                     text: "Component Coupling",
                     weight: 3,
@@ -1786,7 +1663,7 @@ window.translations = {
                         "AI-assisted debugging"
                     ]
                 }
-            },
+            }
         },
         fr_CA: {
             buildManagement: {
@@ -2129,6 +2006,74 @@ window.translations = {
                     ]
                 }
             },
+            applicationArchitecture: {
+                APP1: {
+                    text: "Couplage des Composants",
+                    weight: 3,
+                    options: [
+                        "Monolithe fortement couplé",
+                        "Monolithe modulaire avec des limites claires",
+                        "Architecture orientée services avec interfaces définies",
+                        "Microservices avec couplage faible",
+                        "Architecture événementielle avec découplage complet"
+                    ]
+                },
+                APP2: {
+                    text: "Conception d'API",
+                    weight: 3,
+                    options: [
+                        "Pas de conception formelle d'API",
+                        "APIs REST basiques",
+                        "APIs RESTful avec documentation",
+                        "Conception API-first avec versionnement",
+                        "Passerelle API complète avec gestion"
+                    ]
+                },
+                APP3: {
+                    text: "Conception de l'Évolutivité",
+                    weight: 3,
+                    options: [
+                        "Pas de considérations d'évolutivité",
+                        "Mise à l'échelle horizontale basique",
+                        "Conception de système distribué",
+                        "Architecture native cloud",
+                        "Auto-scaling avec analytique prédictive"
+                    ]
+                },
+                APP4: {
+                    text: "Modèles de Résilience",
+                    weight: 2,
+                    options: [
+                        "Pas de modèles de résilience",
+                        "Gestion d'erreurs basique",
+                        "Disjoncteurs et réessais",
+                        "Tolérance aux pannes complète",
+                        "Architecture auto-réparatrice"
+                    ]
+                },
+                APP5: {
+                    text: "Architecture de Sécurité",
+                    weight: 2,
+                    options: [
+                        "Contrôles de sécurité basiques",
+                        "Modèles de sécurité standard",
+                        "Implémentation de la sécurité dès la conception",
+                        "Architecture zéro confiance",
+                        "Architecture de sécurité basée sur l'IA"
+                    ]
+                },
+                APP6: {
+                    text: "Gestion de la Dette Technique",
+                    weight: 2,
+                    options: [
+                        "Pas de gestion de la dette technique",
+                        "Suivi basique de la dette technique",
+                        "Processus de remboursement planifié",
+                        "Gestion proactive de la dette",
+                        "Prévention automatisée de la dette"
+                    ]
+                }
+            },
             environments: {
                 ENV1: {
                     text: "Provisionnement des Environnements",
@@ -2276,7 +2221,7 @@ window.translations = {
             testing: "Testing",
             dataManagement: "Data Management",
             configurationManagement: "Configuration Management",
-            application: "Application Architecture",
+            applicationArchitecture: "Application Architecture",
             observability: "Observability"
         },
         fr_CA: {
@@ -2286,7 +2231,7 @@ window.translations = {
             testing: "Tests",
             dataManagement: "Gestion des Données",
             configurationManagement: "Gestion de la Configuration",
-            application: "Architecture Applicative",
+            applicationArchitecture: "Architecture Applicative",
             observability: "Observabilité"
         }
     },
@@ -2402,7 +2347,7 @@ window.translations = {
                     "Implement zero-trust config management"
                 ]
             },
-            application: {
+            applicationArchitecture: {
                 "-1_0": [
                     "Document current architecture",
                     "Identify system boundaries",
@@ -2580,7 +2525,7 @@ window.translations = {
                     "Implémenter la gestion de config zero-trust"
                 ]
             },
-            application: {
+            applicationArchitecture: {
                 "-1_0": [
                     "Documenter l'architecture actuelle",
                     "Identifier les limites du système",
