@@ -1,5 +1,7 @@
 # Continuous Delivery Maturity Assessment Tool
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 A comprehensive web-based assessment tool to evaluate an organization's continuous delivery maturity across 8 key practice areas, with full support for English and French.
 
 ## Features
