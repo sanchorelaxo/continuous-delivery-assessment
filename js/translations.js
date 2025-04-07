@@ -2241,356 +2241,486 @@ window.translations = {
         en_CA: {
             buildManagement: {
                 "-1_0": [
-                    "Implement basic version control for all code",
-                    "Set up a simple CI server",
+                    "Adopt a version control system (e.g., Git) & ensure all code & build scripts are stored there - This includes source code, configuration files, build scripts, and deployment configurations",
+                    "Set up a simple build tool (e.g., Maven, Gradle) to standardize the build process - Implement consistent build scripts that can be run both locally and on CI servers",
+                    "Introduce a basic Continuous Integration (CI) server (e.g., Jenkins) to trigger builds on code commits - Configure automated builds that run on every commit to maintain code quality",
+                    "Write a minimal set of automated unit tests to run during builds, ensuring quick feedback - Focus on critical path testing to catch major issues early",
+                    "Train the team on committing code frequently (at least daily) to encourage integration - Establish guidelines for regular commits and merges to minimize integration conflicts",
                     "Create basic build scripts"
                 ],
                 "0_1": [
-                    "Automate build and test processes",
-                    "Implement code review practices",
-                    "Set up automated dependency management"
+                    "Automate build and test processes completely - Eliminate manual steps in the build pipeline and implement automated test suites for unit, integration, and functional tests",
+                    "Implement mandatory code review practices - Set up pull request workflows with required approvals and automated quality checks",
+                    "Set up automated dependency management - Use tools like Dependabot to automatically track and update dependencies with security patches",
+                    "Configure build notifications and dashboards - Implement real-time build status notifications and create dashboards for build health monitoring",
+                    "Establish branch management strategies - Implement GitFlow or trunk-based development with protected branches and automated merging policies"
                 ],
                 "1_2": [
-                    "Implement build metrics and monitoring",
-                    "Set up parallel builds for performance",
-                    "Integrate security scanning in builds"
+                    "Implement comprehensive build metrics and monitoring - Track build times, success rates, test coverage, and code quality metrics with trending analysis",
+                    "Set up parallel builds for performance optimization - Configure distributed builds and test execution to reduce pipeline duration",
+                    "Integrate security scanning in builds - Implement SAST, DAST, and dependency vulnerability scanning in the build pipeline",
+                    "Automate environment provisioning in builds - Include infrastructure-as-code for test environments in the build process",
+                    "Implement artifact management and versioning - Set up artifact repositories with semantic versioning and automated publishing"
                 ],
                 "2_3": [
-                    "Implement predictive build optimization",
-                    "Set up advanced caching strategies",
-                    "Implement ML-based build analytics"
+                    "Implement predictive build optimization - Use AI/ML to predict build failures and optimize build order based on historical data",
+                    "Set up advanced caching strategies - Implement intelligent layer caching and distributed caching systems for faster builds",
+                    "Deploy self-healing build infrastructure - Implement automated recovery and scaling of build agents with monitoring",
+                    "Enable cross-team build analytics - Provide organization-wide build insights and performance metrics for continuous improvement",
+                    "Implement chaos engineering in build pipeline - Regularly test build system resilience through controlled failure injection"
                 ]
             },
             releaseManagement: {
                 "-1_0": [
-                    "Document basic deployment procedures",
-                    "Implement version tracking",
-                    "Create release checklists"
+                    "Document detailed deployment procedures - Create step-by-step guides for all deployment processes, including pre and post-deployment checks",
+                    "Implement basic version tracking - Establish a versioning scheme and maintain a deployment history log",
+                    "Create comprehensive release checklists - Develop standardized checklists covering all aspects of the release process",
+                    "Establish emergency rollback procedures - Document manual rollback steps and recovery processes",
+                    "Define release communication protocols - Create templates for release announcements and stakeholder communications"
                 ],
                 "0_1": [
-                    "Automate deployment scripts",
-                    "Implement rollback capabilities",
-                    "Set up release planning"
+                    "Automate deployment scripts - Create repeatable deployment scripts with environment-specific configurations",
+                    "Implement automated rollback capabilities - Set up automated rollback triggers and procedures for failed deployments",
+                    "Establish release planning framework - Implement release calendars and coordination processes across teams",
+                    "Set up deployment validation tests - Create automated smoke tests and basic health checks post-deployment",
+                    "Implement artifact versioning - Establish consistent artifact naming and versioning conventions"
                 ],
                 "1_2": [
-                    "Implement blue-green deployments",
-                    "Set up automated compliance checks",
-                    "Implement release metrics"
+                    "Implement blue-green deployments - Set up parallel environments for zero-downtime deployments",
+                    "Automate compliance and security checks - Integrate automated security scans and compliance validations in the deployment pipeline",
+                    "Implement comprehensive release metrics - Track deployment frequency, success rates, and mean time to recovery",
+                    "Set up automated environment promotion - Create automated promotion paths between environments with appropriate gates",
+                    "Implement feature toggles - Deploy code with feature flags for controlled feature rollouts"
                 ],
                 "2_3": [
-                    "Implement canary deployments",
-                    "Set up automated governance",
-                    "Implement predictive release analytics"
+                    "Implement sophisticated canary deployments - Use traffic shifting and automated analysis for gradual rollouts",
+                    "Set up advanced automated governance - Implement policy-as-code and automated compliance reporting",
+                    "Deploy predictive release analytics - Use AI/ML for deployment risk assessment and optimal timing",
+                    "Implement automated incident response - Create self-healing deployment processes with automated remediation",
+                    "Enable cross-team release coordination - Implement dependency management and release train automation"
                 ]
             },
             testing: {
                 "-1_0": [
-                    "Implement basic unit tests",
-                    "Create test documentation",
-                    "Set up test environments"
+                    "Implement foundational unit tests - Create basic test cases for critical business logic and core functionality",
+                    "Create comprehensive test documentation - Document test strategies, test cases, and testing procedures for manual and automated tests",
+                    "Set up dedicated test environments - Establish isolated environments that mirror production for reliable testing",
+                    "Define test data management - Create processes for managing test data and maintaining test data sets",
+                    "Establish basic test reporting - Implement simple test result tracking and defect reporting procedures"
                 ],
                 "0_1": [
-                    "Implement automated testing",
-                    "Set up integration tests",
-                    "Create test coverage metrics"
+                    "Implement automated testing pipeline - Set up continuous testing in the CI pipeline with automated test execution",
+                    "Develop integration test suite - Create automated tests for API endpoints, service interactions, and system interfaces",
+                    "Establish test coverage metrics - Implement code coverage tracking and set minimum coverage requirements",
+                    "Create automated regression tests - Build a suite of regression tests for critical user journeys",
+                    "Implement test environment automation - Automate test environment provisioning and configuration"
                 ],
                 "1_2": [
-                    "Implement performance testing",
-                    "Set up security testing",
-                    "Implement test automation framework"
+                    "Implement comprehensive performance testing - Set up load testing, stress testing, and performance monitoring with defined SLAs",
+                    "Establish security testing framework - Integrate automated security scans, penetration testing, and vulnerability assessments",
+                    "Deploy advanced test automation framework - Implement behavior-driven development (BDD) and test-driven development (TDD) practices",
+                    "Set up parallel test execution - Enable distributed test execution for faster feedback cycles",
+                    "Implement test data automation - Create automated test data generation and management systems"
                 ],
                 "2_3": [
-                    "Implement AI-driven testing",
-                    "Set up chaos engineering",
-                    "Implement predictive test selection"
+                    "Implement AI-driven test automation - Use machine learning for test case generation and optimization",
+                    "Establish chaos engineering practices - Systematically inject failures to test system resilience",
+                    "Deploy smart test selection - Use AI to predict which tests to run based on code changes",
+                    "Implement visual testing automation - Use AI-powered visual regression testing for UI changes",
+                    "Create self-healing test automation - Implement AI-driven test maintenance and automatic test repair"
                 ]
             },
             dataManagement: {
                 "-1_0": [
-                    "Implement basic database version control",
-                    "Create backup procedures",
-                    "Document data structures"
+                    "Implement database version control - Set up version control for database schemas, migrations, and stored procedures using tools like Flyway or Liquibase",
+                    "Create comprehensive backup procedures - Establish regular backup schedules, verification processes, and documented recovery procedures",
+                    "Document data structures and relationships - Create detailed documentation of database schemas, tables, relationships, and data dictionaries",
+                    "Establish basic data governance - Define data ownership, access controls, and basic data quality standards",
+                    "Set up database monitoring - Implement basic monitoring for database health, performance, and storage usage"
                 ],
                 "0_1": [
-                    "Implement automated backups",
-                    "Set up data migration scripts",
-                    "Create data security policies"
+                    "Implement automated backup and recovery - Set up automated backup processes with verification and automated recovery testing",
+                    "Establish migration automation - Create repeatable database migration scripts with rollback capabilities",
+                    "Implement data security policies - Define and enforce data encryption, access controls, and audit logging",
+                    "Set up data validation rules - Implement automated checks for data integrity and consistency",
+                    "Create database performance baselines - Establish monitoring for key performance metrics and query optimization"
                 ],
                 "1_2": [
-                    "Implement zero-downtime migrations",
-                    "Set up data quality monitoring",
-                    "Implement data lifecycle management"
+                    "Implement zero-downtime migrations - Design and implement database changes with no service interruption",
+                    "Set up comprehensive data quality monitoring - Implement automated data quality checks, profiling, and anomaly detection",
+                    "Establish data lifecycle management - Implement automated data retention, archiving, and purging processes",
+                    "Create advanced security measures - Implement row-level security, dynamic data masking, and advanced encryption",
+                    "Deploy database performance optimization - Implement query optimization, indexing strategies, and automated performance tuning"
                 ],
                 "2_3": [
-                    "Implement predictive data optimization",
-                    "Set up AI-driven data quality",
-                    "Implement automated compliance"
+                    "Implement AI-driven data quality management - Use machine learning for data quality monitoring, prediction, and automated correction",
+                    "Set up automated compliance monitoring - Deploy AI-powered tools for regulatory compliance checking and reporting",
+                    "Establish predictive database management - Implement AI-driven capacity planning and performance optimization",
+                    "Create self-healing data systems - Deploy automated error detection and correction mechanisms",
+                    "Implement advanced data governance - Use AI for data classification, privacy protection, and policy enforcement"
                 ]
             },
             configurationManagement: {
                 "-1_0": [
-                    "Create configuration documentation",
-                    "Implement basic config files",
-                    "Set up environment variables"
+                    "Create configuration documentation - Document all configurations, their purposes, defaults, and system impacts",
+                    "Implement basic config files - Establish separate configuration files for different environments with explanatory comments",
+                    "Set up environment variables - Define and document essential environment variables with secure defaults",
+                    "Establish config standards - Create standardized naming conventions and structure for configurations",
+                    "Implement basic security - Set up basic protection for sensitive configuration values"
                 ],
                 "0_1": [
-                    "Implement config version control",
-                    "Set up config validation",
-                    "Create config management tools"
+                    "Implement config version control - Set up version control for all configuration files with change tracking",
+                    "Set up config validation - Implement automated validation of configuration files and values",
+                    "Create config management tools - Develop tools for configuration deployment and updates",
+                    "Implement environment separation - Establish clear separation of configurations across environments",
+                    "Set up configuration reviews - Implement review processes for configuration changes"
                 ],
                 "1_2": [
-                    "Implement secret management",
-                    "Set up config automation",
-                    "Create config testing"
+                    "Implement secret management - Deploy secure secret management with rotation and access control",
+                    "Set up config automation - Automate configuration deployment and validation processes",
+                    "Create config testing - Implement comprehensive testing of configuration changes",
+                    "Establish config monitoring - Set up monitoring for configuration usage and impacts",
+                    "Implement configuration as code - Treat configuration as code with proper version control and testing"
                 ],
                 "2_3": [
-                    "Implement dynamic configuration",
-                    "Set up AI-driven config optimization",
-                    "Implement zero-trust config management"
+                    "Implement dynamic configuration - Deploy real-time configuration updates without restarts",
+                    "Set up AI-driven config optimization - Use machine learning for configuration optimization",
+                    "Implement zero-trust config management - Deploy advanced security with strict access controls",
+                    "Establish predictive analysis - Deploy AI for predicting configuration impacts",
+                    "Implement advanced security - Set up advanced encryption and access controls for configurations"
                 ]
             },
             applicationArchitecture: {
                 "-1_0": [
-                    "Document current architecture",
-                    "Identify system boundaries",
-                    "Create component diagrams"
+                    "Document current architecture - Create detailed documentation of existing architecture, including data flows and dependencies",
+                    "Identify system boundaries - Clearly define interfaces and integration points between different components",
+                    "Create component diagrams - Develop detailed diagrams showing component relationships and interactions",
+                    "Establish coding standards - Define and document coding conventions and best practices",
+                    "Set up architecture review - Establish regular review process to evaluate architectural alignment"
                 ],
                 "0_1": [
-                    "Implement modular design",
-                    "Set up API guidelines",
-                    "Create scalability plan"
+                    "Implement modular design - Restructure application into independent modules with well-defined interfaces",
+                    "Set up API guidelines - Establish REST standards, OpenAPI documentation, and interface contracts",
+                    "Create scalability plan - Develop architectural evolution strategy with measurable objectives",
+                    "Implement separation of concerns - Clearly separate business logic, data access, and user interface",
+                    "Establish architectural metrics - Define and measure architectural quality indicators"
                 ],
                 "1_2": [
-                    "Implement microservices",
-                    "Set up service mesh",
-                    "Create resilience patterns"
+                    "Implement microservices - Design and deploy microservices architecture with well-defined business domains",
+                    "Set up service mesh - Implement service mesh for traffic management, security, and observability",
+                    "Create resilience patterns - Implement resilience patterns like Circuit Breaker, Bulkhead, and Fallback",
+                    "Implement asynchronous communication - Set up messaging systems and queues",
+                    "Establish service contracts - Define and maintain strict service contracts between components"
                 ],
                 "2_3": [
-                    "Implement event-driven architecture",
-                    "Set up AI-driven optimization",
-                    "Create self-healing systems"
+                    "Implement event-driven architecture - Set up event-driven system with CQRS and Event Sourcing",
+                    "Set up AI-driven optimization - Use machine learning to optimize architectural decisions",
+                    "Create self-healing systems - Implement auto-healing and self-optimization mechanisms",
+                    "Implement adaptive architecture - Develop systems that automatically adapt to load changes",
+                    "Establish advanced architectural governance - Set up automated architectural validation and optimization processes"
                 ]
             },
             environments: {
                 "-1_0": [
-                    "Document environment setup",
-                    "Create basic provisioning scripts",
-                    "Set up environment tracking"
+                    "Document environment setup - Create detailed documentation of all environments, including configurations and dependencies",
+                    "Create basic provisioning scripts - Develop scripts to automate consistent environment creation",
+                    "Set up environment tracking - Implement version tracking and change management for environments",
+                    "Establish environment standards - Define standard configurations for each environment type",
+                    "Implement secrets management - Set up secure management of sensitive information"
                 ],
                 "0_1": [
-                    "Implement infrastructure as code",
-                    "Set up environment automation",
-                    "Create environment testing"
+                    "Implement infrastructure as code - Use tools like Terraform or CloudFormation for infrastructure management",
+                    "Set up environment automation - Implement automated pipelines for environment provisioning",
+                    "Create environment testing - Develop automated tests to validate environment compliance",
+                    "Implement configuration management - Use configuration management tools like Ansible or Chef",
+                    "Establish environment metrics - Define and monitor environment performance indicators"
                 ],
                 "1_2": [
-                    "Implement immutable infrastructure",
-                    "Set up auto-scaling",
-                    "Create disaster recovery"
+                    "Implement immutable infrastructure - Adopt immutable infrastructure practices with containers and system images",
+                    "Set up auto-scaling - Implement automatic scaling based on load and metrics",
+                    "Create disaster recovery - Implement automated recovery and failover strategies",
+                    "Implement automated security - Integrate automated security controls into provisioning",
+                    "Establish continuous compliance - Set up automated compliance checks"
                 ],
                 "2_3": [
-                    "Implement predictive scaling",
-                    "Set up self-healing environments",
-                    "Create AI-driven optimization"
+                    "Implement predictive scaling - Use AI to predict and automatically adjust resources",
+                    "Set up self-healing environments - Deploy self-healing mechanisms for infrastructure issues",
+                    "Create AI-driven optimization - Implement automated resource and cost optimization",
+                    "Implement autonomous orchestration - Develop intelligent orchestration systems for environment management",
+                    "Establish advanced governance - Set up automated governance with continuous validation and optimization"
                 ]
             },
             observability: {
                 "-1_0": [
-                    "Implement basic logging",
-                    "Set up system monitoring",
-                    "Create alert rules"
+                    "Implement basic logging - Set up structured logging system with appropriate severity levels",
+                    "Set up system monitoring - Establish baseline monitoring for essential system metrics",
+                    "Create alert rules - Define thresholds for critical incident alerting",
+                    "Establish logging formats - Standardize log formats to facilitate analysis",
+                    "Set up log rotation - Implement efficient log storage management"
                 ],
                 "0_1": [
-                    "Implement centralized logging",
-                    "Set up metrics collection",
-                    "Create dashboards"
+                    "Implement centralized logging - Deploy centralized log collection and analysis system",
+                    "Set up metrics collection - Implement automated collection of application and system metrics",
+                    "Create dashboards - Develop clear visualizations for system health monitoring",
+                    "Implement log aggregation - Set up tools for log correlation and analysis",
+                    "Establish advanced alerting - Configure alerts based on complex conditions"
                 ],
                 "1_2": [
-                    "Implement distributed tracing",
-                    "Set up SLO monitoring",
-                    "Create automated analysis"
+                    "Implement distributed tracing - Set up transaction tracing across distributed services",
+                    "Set up SLO monitoring - Establish and monitor service level objectives",
+                    "Create automated analysis - Develop automated systems for incident and performance analysis",
+                    "Implement anomaly detection - Set up automated detection of abnormal behavior",
+                    "Establish business dashboards - Create business-oriented visualizations for KPI tracking"
                 ],
                 "2_3": [
-                    "Implement AI-driven observability",
-                    "Set up predictive analytics",
-                    "Create autonomous operations"
+                    "Implement AI-driven observability - Use machine learning to enhance detection and analysis",
+                    "Set up predictive analytics - Implement systems for incident and performance prediction",
+                    "Create autonomous operations - Develop self-adaptive systems for incident management",
+                    "Implement self-diagnosis - Deploy automated diagnostic and resolution capabilities",
+                    "Establish continuous optimization - Set up data-driven continuous optimization systems"
                 ]
             }
         },
         fr_CA: {
             buildManagement: {
                 "-1_0": [
-                    "Mettre en place le contrôle de version de base",
-                    "Configurer un serveur d'IC simple",
+                    "Adopter un système de contrôle de version (ex: Git) et s'assurer que tout le code et les scripts de build y sont stockés - Inclure le code source, les fichiers de configuration, les scripts de build et les configurations de déploiement",
+                    "Mettre en place un outil de build simple (ex: Maven, Gradle) pour standardiser le processus de build - Implémenter des scripts de build cohérents qui peuvent être exécutés localement et sur les serveurs CI",
+                    "Introduire un serveur d'Intégration Continue (IC) basique (ex: Jenkins) pour déclencher des builds lors des commits - Configurer des builds automatisés qui s'exécutent à chaque commit pour maintenir la qualité du code",
+                    "Écrire un ensemble minimal de tests unitaires automatisés à exécuter pendant les builds, assurant un retour rapide - Se concentrer sur les tests des chemins critiques pour détecter les problèmes majeurs tôt",
+                    "Former l'équipe à commiter le code fréquemment (au moins quotidiennement) pour encourager l'intégration - Établir des directives pour les commits et les fusions réguliers afin de minimiser les conflits d'intégration",
                     "Créer des scripts de build basiques"
                 ],
                 "0_1": [
-                    "Automatiser les processus de build et de test",
-                    "Implémenter des pratiques de revue de code",
-                    "Configurer la gestion automatisée des dépendances"
+                    "Automatiser complètement les processus de build et de test - Éliminer les étapes manuelles dans le pipeline de build et implémenter des suites de tests automatisés pour les tests unitaires, d'intégration et fonctionnels",
+                    "Mettre en place des pratiques obligatoires de revue de code - Configurer des workflows de pull request avec approbations requises et vérifications automatisées de qualité",
+                    "Configurer la gestion automatisée des dépendances - Utiliser des outils comme Dependabot pour suivre et mettre à jour automatiquement les dépendances avec les correctifs de sécurité",
+                    "Configurer les notifications et tableaux de bord de build - Implémenter des notifications en temps réel de l'état des builds et créer des tableaux de bord pour surveiller la santé des builds",
+                    "Établir des stratégies de gestion des branches - Implémenter GitFlow ou le développement trunk-based avec des branches protégées et des politiques de fusion automatisées"
                 ],
                 "1_2": [
-                    "Implémenter des métriques de build",
-                    "Configurer des builds parallèles",
-                    "Intégrer l'analyse de sécurité dans les builds"
+                    "Implémenter des métriques complètes de build et monitoring - Suivre les temps de build, taux de succès, couverture de tests et métriques de qualité du code avec analyse des tendances",
+                    "Configurer des builds parallèles pour l'optimisation - Configurer des builds distribués et l'exécution des tests pour réduire la durée du pipeline",
+                    "Intégrer l'analyse de sécurité dans les builds - Implémenter SAST, DAST et l'analyse des vulnérabilités des dépendances dans le pipeline de build",
+                    "Automatiser le provisionnement d'environnement dans les builds - Inclure l'infrastructure-as-code pour les environnements de test dans le processus de build",
+                    "Implémenter la gestion et le versionnement des artefacts - Mettre en place des dépôts d'artefacts avec versionnement sémantique et publication automatisée"
                 ],
                 "2_3": [
-                    "Implémenter l'optimisation prédictive des builds",
-                    "Configurer des stratégies de cache avancées",
-                    "Implémenter l'analyse des builds basée sur le ML"
+                    "Implémenter l'optimisation prédictive des builds - Utiliser l'IA/ML pour prédire les échecs de build et optimiser l'ordre des builds basé sur les données historiques",
+                    "Configurer des stratégies de cache avancées - Implémenter la mise en cache intelligente des couches et des systèmes de cache distribués pour des builds plus rapides",
+                    "Déployer une infrastructure de build auto-réparatrice - Implémenter la récupération automatique et la mise à l'échelle des agents de build avec monitoring",
+                    "Activer l'analyse des builds inter-équipes - Fournir des insights et métriques de performance à l'échelle de l'organisation pour l'amélioration continue",
+                    "Implémenter l'ingénierie du chaos dans le pipeline de build - Tester régulièrement la résilience du système de build par l'injection contrôlée de pannes"
                 ]
             },
             releaseManagement: {
                 "-1_0": [
-                    "Documenter les procédures de déploiement",
-                    "Implémenter le suivi des versions",
-                    "Créer des listes de contrôle de version"
+                    "Documenter les procédures de déploiement détaillées - Créer des guides étape par étape pour tous les processus de déploiement, y compris les vérifications avant et après déploiement",
+                    "Implémenter le suivi de version de base - Établir un schéma de versionnement et maintenir un journal d'historique des déploiements",
+                    "Créer des listes de contrôle de version complètes - Développer des listes standardisées couvrant tous les aspects du processus de version",
+                    "Établir des procédures de rollback d'urgence - Documenter les étapes de rollback manuel et les processus de récupération",
+                    "Définir des protocoles de communication de version - Créer des modèles pour les annonces de version et les communications aux parties prenantes"
                 ],
                 "0_1": [
-                    "Automatiser les scripts de déploiement",
-                    "Implémenter les capacités de rollback",
-                    "Configurer la planification des versions"
+                    "Automatiser les scripts de déploiement - Créer des scripts de déploiement répétables avec des configurations spécifiques à l'environnement",
+                    "Implémenter les capacités de rollback automatisé - Mettre en place des déclencheurs et procédures de rollback automatisés pour les déploiements échoués",
+                    "Établir un cadre de planification des versions - Implémenter des calendriers de version et des processus de coordination entre les équipes",
+                    "Mettre en place des tests de validation de déploiement - Créer des tests de fumée automatisés et des vérifications de santé de base post-déploiement",
+                    "Implémenter le versionnement des artefacts - Établir des conventions cohérentes de nommage et de versionnement des artefacts"
                 ],
                 "1_2": [
-                    "Implémenter les déploiements blue-green",
-                    "Configurer les vérifications de conformité",
-                    "Implémenter les métriques de version"
+                    "Implémenter les déploiements blue-green - Mettre en place des environnements parallèles pour des déploiements sans temps d'arrêt",
+                    "Automatiser les vérifications de conformité et de sécurité - Intégrer des analyses de sécurité automatisées et des validations de conformité dans le pipeline de déploiement",
+                    "Implémenter des métriques de version complètes - Suivre la fréquence des déploiements, les taux de succès et le temps moyen de récupération",
+                    "Mettre en place la promotion automatisée des environnements - Créer des chemins de promotion automatisés entre les environnements avec des portes appropriées",
+                    "Implémenter les bascules de fonctionnalités - Déployer du code avec des indicateurs de fonctionnalités pour des lancements contrôlés"
                 ],
                 "2_3": [
-                    "Implémenter les déploiements canary",
-                    "Configurer la gouvernance automatisée",
-                    "Implémenter l'analytique prédictive des versions"
+                    "Implémenter des déploiements canary sophistiqués - Utiliser le basculement de trafic et l'analyse automatisée pour des déploiements progressifs",
+                    "Mettre en place une gouvernance automatisée avancée - Implémenter la politique-as-code et les rapports de conformité automatisés",
+                    "Déployer l'analytique prédictive des versions - Utiliser l'IA/ML pour l'évaluation des risques de déploiement et le timing optimal",
+                    "Implémenter la réponse automatisée aux incidents - Créer des processus de déploiement auto-réparateurs avec remédiation automatisée",
+                    "Activer la coordination des versions inter-équipes - Implémenter la gestion des dépendances et l'automatisation des trains de version"
                 ]
             },
             testing: {
                 "-1_0": [
-                    "Implémenter des tests unitaires basiques",
-                    "Créer la documentation des tests",
-                    "Configurer les environnements de test"
+                    "Implémenter des tests unitaires fondamentaux - Créer des cas de test de base pour la logique métier critique et les fonctionnalités principales",
+                    "Créer une documentation complète des tests - Documenter les stratégies, les cas de test et les procédures pour les tests manuels et automatisés",
+                    "Mettre en place des environnements de test dédiés - Établir des environnements isolés qui reflètent la production pour des tests fiables",
+                    "Définir la gestion des données de test - Créer des processus pour gérer les données de test et maintenir les jeux de données",
+                    "Établir des rapports de test basiques - Implémenter le suivi des résultats de test et les procédures de signalement des défauts"
                 ],
                 "0_1": [
-                    "Implémenter les tests automatisés",
-                    "Configurer les tests d'intégration",
-                    "Créer des métriques de couverture de test"
+                    "Implémenter un pipeline de tests automatisés - Mettre en place des tests continus dans le pipeline CI avec exécution automatisée",
+                    "Développer une suite de tests d'intégration - Créer des tests automatisés pour les points d'API, les interactions de services et les interfaces système",
+                    "Établir des métriques de couverture de tests - Implémenter le suivi de la couverture de code et définir des exigences minimales",
+                    "Créer des tests de régression automatisés - Construire une suite de tests de régression pour les parcours utilisateurs critiques",
+                    "Implémenter l'automatisation des environnements de test - Automatiser le provisionnement et la configuration des environnements de test"
                 ],
                 "1_2": [
-                    "Implémenter les tests de performance",
-                    "Configurer les tests de sécurité",
-                    "Implémenter un framework de test automatisé"
+                    "Implémenter des tests de performance complets - Mettre en place des tests de charge, de stress et la surveillance des performances avec des SLA définis",
+                    "Établir un cadre de tests de sécurité - Intégrer des analyses de sécurité automatisées, des tests de pénétration et des évaluations de vulnérabilité",
+                    "Déployer un framework de test avancé - Implémenter des pratiques de développement piloté par le comportement (BDD) et par les tests (TDD)",
+                    "Mettre en place l'exécution parallèle des tests - Permettre l'exécution distribuée des tests pour des cycles de feedback plus rapides",
+                    "Implémenter l'automatisation des données de test - Créer des systèmes automatisés de génération et de gestion des données de test"
                 ],
                 "2_3": [
-                    "Implémenter les tests pilotés par l'IA",
-                    "Configurer l'ingénierie du chaos",
-                    "Implémenter la sélection prédictive des tests"
+                    "Implémenter l'automatisation des tests pilotée par l'IA - Utiliser l'apprentissage automatique pour la génération et l'optimisation des cas de test",
+                    "Établir des pratiques d'ingénierie du chaos - Injecter systématiquement des pannes pour tester la résilience du système",
+                    "Déployer la sélection intelligente des tests - Utiliser l'IA pour prédire quels tests exécuter en fonction des changements de code",
+                    "Implémenter l'automatisation des tests visuels - Utiliser des tests de régression visuelle pilotés par l'IA pour les changements d'interface",
+                    "Créer une automatisation des tests auto-réparante - Implémenter la maintenance des tests pilotée par l'IA et la réparation automatique des tests"
                 ]
             },
             dataManagement: {
                 "-1_0": [
-                    "Implémenter le contrôle de version de base de données",
-                    "Créer des procédures de sauvegarde",
-                    "Documenter les structures de données"
+                    "Implémenter le contrôle de version de base de données - Mettre en place un contrôle de version pour les schémas, migrations et procédures stockées en utilisant des outils comme Flyway ou Liquibase",
+                    "Créer des procédures de sauvegarde complètes - Établir des calendriers de sauvegarde réguliers, des processus de vérification et des procédures de récupération documentées",
+                    "Documenter les structures et relations de données - Créer une documentation détaillée des schémas de base de données, tables, relations et dictionnaires de données",
+                    "Établir une gouvernance de données de base - Définir la propriété des données, les contrôles d'accès et les normes de qualité de données de base",
+                    "Mettre en place la surveillance des bases de données - Implémenter une surveillance de base pour la santé, les performances et l'utilisation du stockage"
                 ],
                 "0_1": [
-                    "Implémenter les sauvegardes automatisées",
-                    "Configurer les scripts de migration",
-                    "Créer des politiques de sécurité des données"
+                    "Implémenter la sauvegarde et la récupération automatisées - Mettre en place des processus de sauvegarde automatisés avec vérification et tests de récupération automatisés",
+                    "Établir l'automatisation des migrations - Créer des scripts de migration de base de données reproductibles avec capacités de rollback",
+                    "Implémenter des politiques de sécurité des données - Définir et appliquer le chiffrement des données, les contrôles d'accès et la journalisation des audits",
+                    "Configurer des règles de validation des données - Implémenter des vérifications automatisées pour l'intégrité et la cohérence des données",
+                    "Créer des références de performance - Établir une surveillance des métriques de performance clés et l'optimisation des requêtes"
                 ],
                 "1_2": [
-                    "Implémenter les migrations sans interruption",
-                    "Configurer la surveillance de la qualité des données",
-                    "Implémenter la gestion du cycle de vie des données"
+                    "Implémenter des migrations sans interruption - Concevoir et implémenter des changements de base de données sans interruption de service",
+                    "Configurer une surveillance complète de la qualité des données - Implémenter des vérifications automatisées de la qualité des données, le profilage et la détection d'anomalies",
+                    "Établir la gestion du cycle de vie des données - Implémenter des processus automatisés de rétention, d'archivage et de purge des données",
+                    "Créer des mesures de sécurité avancées - Implémenter la sécurité au niveau des lignes, le masquage dynamique des données et le chiffrement avancé",
+                    "Déployer l'optimisation des performances - Implémenter l'optimisation des requêtes, les stratégies d'indexation et l'ajustement automatique des performances"
                 ],
                 "2_3": [
-                    "Implémenter l'optimisation prédictive des données",
-                    "Configurer la qualité des données pilotée par l'IA",
-                    "Implémenter la conformité automatisée"
+                    "Implémenter la gestion de la qualité des données pilotée par l'IA - Utiliser l'apprentissage automatique pour la surveillance, la prédiction et la correction automatique de la qualité des données",
+                    "Configurer la surveillance automatisée de la conformité - Déployer des outils pilotés par l'IA pour la vérification et le reporting de la conformité réglementaire",
+                    "Établir la gestion prédictive des bases de données - Implémenter la planification de la capacité et l'optimisation des performances pilotées par l'IA",
+                    "Créer des systèmes de données auto-réparateurs - Déployer des mécanismes automatisés de détection et de correction des erreurs",
+                    "Implémenter une gouvernance avancée des données - Utiliser l'IA pour la classification des données, la protection de la vie privée et l'application des politiques"
                 ]
             },
             configurationManagement: {
                 "-1_0": [
-                    "Créer la documentation de configuration",
-                    "Implémenter des fichiers de config basiques",
-                    "Configurer les variables d'environnement"
+                    "Créer la documentation de configuration complète - Documenter toutes les configurations, leurs objectifs, valeurs par défaut et impacts sur le système",
+                    "Implémenter des fichiers de config basiques - Établir des fichiers de configuration séparés pour différents environnements avec des commentaires explicatifs",
+                    "Configurer les variables d'environnement - Définir et documenter les variables d'environnement essentielles avec des valeurs par défaut sécurisées",
+                    "Établir des standards de nommage - Créer des conventions de nommage cohérentes pour les paramètres de configuration",
+                    "Mettre en place la validation de base - Implémenter des vérifications simples pour les valeurs de configuration critiques"
                 ],
                 "0_1": [
-                    "Implémenter le contrôle de version de config",
-                    "Configurer la validation de config",
-                    "Créer des outils de gestion de config"
+                    "Implémenter le contrôle de version de config - Mettre en place un système de gestion de version pour tous les fichiers de configuration",
+                    "Configurer la validation de config avancée - Créer des schémas de validation pour garantir l'intégrité des configurations",
+                    "Créer des outils de gestion de config - Développer des utilitaires pour la gestion et le déploiement des configurations",
+                    "Implémenter la séparation des configurations - Séparer les configurations par environnement et par composant",
+                    "Établir des processus de revue - Mettre en place des procédures de revue pour les changements de configuration"
                 ],
                 "1_2": [
-                    "Implémenter la gestion des secrets",
-                    "Configurer l'automatisation de config",
-                    "Créer des tests de configuration"
+                    "Implémenter la gestion des secrets - Mettre en place un système sécurisé de gestion des secrets avec rotation automatique",
+                    "Configurer l'automatisation de config - Automatiser le déploiement et la validation des configurations",
+                    "Créer des tests de configuration - Développer des tests automatisés pour valider les configurations",
+                    "Implémenter la détection des dérives - Mettre en place la surveillance des changements de configuration non autorisés",
+                    "Établir l'audit des configurations - Créer des pistes d'audit détaillées pour tous les changements de configuration"
                 ],
                 "2_3": [
-                    "Implémenter la configuration dynamique",
-                    "Configurer l'optimisation de config par l'IA",
-                    "Implémenter la gestion de config zero-trust"
+                    "Implémenter la configuration dynamique - Mettre en place un système de configuration en temps réel avec rollback automatique",
+                    "Configurer l'optimisation de config par l'IA - Utiliser l'apprentissage automatique pour optimiser les paramètres de configuration",
+                    "Implémenter la gestion de config zero-trust - Établir une sécurité maximale avec validation continue des configurations",
+                    "Créer des systèmes auto-adaptatifs - Développer des configurations qui s'ajustent automatiquement selon les conditions",
+                    "Établir une gouvernance avancée - Implémenter des politiques de configuration pilotées par l'IA avec conformité automatisée"
                 ]
             },
             applicationArchitecture: {
                 "-1_0": [
-                    "Documenter l'architecture actuelle",
-                    "Identifier les limites du système",
-                    "Créer des diagrammes de composants"
+                    "Documenter l'architecture actuelle - Créer une documentation détaillée de l'architecture existante, incluant les flux de données et les dépendances",
+                    "Identifier les limites du système - Définir clairement les interfaces et les points d'intégration entre les différents composants",
+                    "Créer des diagrammes de composants - Développer des diagrammes détaillés montrant les relations entre les composants et leurs interactions",
+                    "Établir des standards de code - Définir et documenter les conventions de codage et les meilleures pratiques",
+                    "Mettre en place la revue d'architecture - Établir un processus de revue régulier pour évaluer l'alignement architectural"
                 ],
                 "0_1": [
-                    "Implémenter une conception modulaire",
-                    "Configurer les directives d'API",
-                    "Créer un plan d'évolutivité"
+                    "Implémenter une conception modulaire - Restructurer l'application en modules indépendants avec des interfaces bien définies",
+                    "Configurer les directives d'API - Établir des standards REST, la documentation OpenAPI et les contrats d'interface",
+                    "Créer un plan d'évolutivité - Développer une stratégie d'évolution architecturale avec des objectifs mesurables",
+                    "Implémenter la séparation des préoccupations - Séparer clairement la logique métier, l'accès aux données et l'interface utilisateur",
+                    "Établir des métriques architecturales - Définir et mesurer des indicateurs de qualité architecturale"
                 ],
                 "1_2": [
-                    "Implémenter les microservices",
-                    "Configurer le service mesh",
-                    "Créer des modèles de résilience"
+                    "Implémenter les microservices - Concevoir et déployer une architecture de microservices avec des domaines métier bien définis",
+                    "Configurer le service mesh - Mettre en place un maillage de services pour la gestion du trafic, la sécurité et l'observabilité",
+                    "Créer des modèles de résilience - Implémenter des patterns de résilience comme Circuit Breaker, Bulkhead et Fallback",
+                    "Implémenter la communication asynchrone - Mettre en place des systèmes de messagerie et de files d'attente",
+                    "Établir des contrats de service - Définir et maintenir des contrats de service stricts entre les composants"
                 ],
                 "2_3": [
-                    "Implémenter l'architecture événementielle",
-                    "Configurer l'optimisation pilotée par l'IA",
-                    "Créer des systèmes auto-réparants"
+                    "Implémenter l'architecture événementielle - Mettre en place un système d'architecture pilotée par les événements avec CQRS et Event Sourcing",
+                    "Configurer l'optimisation pilotée par l'IA - Utiliser l'apprentissage automatique pour optimiser les décisions architecturales",
+                    "Créer des systèmes auto-réparants - Implémenter des mécanismes d'auto-guérison et d'auto-optimisation",
+                    "Implémenter l'architecture adaptative - Développer des systèmes qui s'adaptent automatiquement aux changements de charge",
+                    "Établir une gouvernance architecturale avancée - Mettre en place des processus automatisés de validation et d'optimisation architecturale"
                 ]
             },
             environments: {
                 "-1_0": [
-                    "Documenter la configuration des environnements",
-                    "Créer des scripts de provisionnement basiques",
-                    "Configurer le suivi des environnements"
+                    "Documenter la configuration des environnements - Créer une documentation détaillée de tous les environnements, incluant les configurations et dépendances",
+                    "Créer des scripts de provisionnement basiques - Développer des scripts pour automatiser la création d'environnements cohérents",
+                    "Configurer le suivi des environnements - Mettre en place un système de suivi des versions et des modifications d'environnement",
+                    "Établir des standards d'environnement - Définir des configurations standard pour chaque type d'environnement",
+                    "Implémenter la gestion des secrets - Mettre en place une gestion sécurisée des informations sensibles"
                 ],
                 "0_1": [
-                    "Implémenter l'infrastructure as code",
-                    "Configurer l'automatisation des environnements",
-                    "Créer des tests d'environnement"
+                    "Implémenter l'infrastructure as code - Utiliser des outils comme Terraform ou CloudFormation pour gérer l'infrastructure",
+                    "Configurer l'automatisation des environnements - Mettre en place des pipelines automatisés pour le provisionnement d'environnements",
+                    "Créer des tests d'environnement - Développer des tests automatisés pour valider la conformité des environnements",
+                    "Implémenter la gestion des configurations - Utiliser des outils de gestion de configuration comme Ansible ou Chef",
+                    "Établir des métriques d'environnement - Définir et surveiller des indicateurs de performance des environnements"
                 ],
                 "1_2": [
-                    "Implémenter l'infrastructure immuable",
-                    "Configurer l'auto-scaling",
-                    "Créer la reprise après sinistre"
+                    "Implémenter l'infrastructure immuable - Adopter des pratiques d'infrastructure immuable avec des conteneurs et des images système",
+                    "Configurer l'auto-scaling - Mettre en place la mise à l'échelle automatique basée sur la charge et les métriques",
+                    "Créer la reprise après sinistre - Implémenter des stratégies de récupération et de basculement automatisées",
+                    "Implémenter la sécurité automatisée - Intégrer des contrôles de sécurité automatisés dans le provisionnement",
+                    "Établir la conformité continue - Mettre en place des vérifications automatisées de conformité"
                 ],
                 "2_3": [
-                    "Implémenter la mise à l'échelle prédictive",
-                    "Configurer les environnements auto-réparants",
-                    "Créer l'optimisation pilotée par l'IA"
+                    "Implémenter la mise à l'échelle prédictive - Utiliser l'IA pour prédire et ajuster automatiquement les ressources",
+                    "Configurer les environnements auto-réparants - Déployer des mécanismes d'auto-guérison pour les problèmes d'infrastructure",
+                    "Créer l'optimisation pilotée par l'IA - Implémenter l'optimisation automatique des ressources et des coûts",
+                    "Implémenter l'orchestration autonome - Développer des systèmes d'orchestration intelligents pour la gestion des environnements",
+                    "Établir une gouvernance avancée - Mettre en place une gouvernance automatisée avec validation et optimisation continues"
                 ]
             },
             observability: {
                 "-1_0": [
-                    "Implémenter la journalisation de base",
-                    "Configurer la surveillance du système",
-                    "Créer des règles d'alerte"
+                    "Implémenter la journalisation de base - Mettre en place un système de journalisation structuré avec des niveaux de gravité appropriés",
+                    "Configurer la surveillance du système - Établir une surveillance de base pour les métriques système essentielles",
+                    "Créer des règles d'alerte - Définir des seuils d'alerte pour les incidents critiques",
+                    "Établir des formats de journalisation - Standardiser les formats de logs pour faciliter l'analyse",
+                    "Mettre en place la rotation des logs - Implémenter une gestion efficace du stockage des journaux"
                 ],
                 "0_1": [
-                    "Implémenter la journalisation centralisée",
-                    "Configurer la collecte de métriques",
-                    "Créer des tableaux de bord"
+                    "Implémenter la journalisation centralisée - Déployer un système centralisé de collecte et d'analyse des logs",
+                    "Configurer la collecte de métriques - Mettre en place une collecte automatisée des métriques applicatives et système",
+                    "Créer des tableaux de bord - Développer des visualisations claires pour surveiller l'état du système",
+                    "Implémenter l'agrégation des logs - Mettre en place des outils pour corréler et analyser les journaux",
+                    "Établir des alertes avancées - Configurer des alertes basées sur des conditions complexes"
                 ],
                 "1_2": [
-                    "Implémenter le traçage distribué",
-                    "Configurer la surveillance des SLO",
-                    "Créer l'analyse automatisée"
+                    "Implémenter le traçage distribué - Mettre en place le traçage des transactions à travers les services distribués",
+                    "Configurer la surveillance des SLO - Établir et surveiller les objectifs de niveau de service",
+                    "Créer l'analyse automatisée - Développer des systèmes d'analyse automatique des incidents et des performances",
+                    "Implémenter la détection d'anomalies - Mettre en place des systèmes de détection automatique des comportements anormaux",
+                    "Établir des tableaux de bord métier - Créer des visualisations orientées métier pour suivre les KPIs"
                 ],
                 "2_3": [
-                    "Implémenter l'observabilité pilotée par l'IA",
-                    "Configurer l'analytique prédictive",
-                    "Créer les opérations autonomes"
+                    "Implémenter l'observabilité pilotée par l'IA - Utiliser l'apprentissage automatique pour améliorer la détection et l'analyse",
+                    "Configurer l'analytique prédictive - Mettre en place des systèmes de prédiction des incidents et des performances",
+                    "Créer les opérations autonomes - Développer des systèmes auto-adaptatifs pour la gestion des incidents",
+                    "Implémenter l'auto-diagnostic - Déployer des capacités d'auto-diagnostic et de résolution automatisée",
+                    "Établir l'optimisation continue - Mettre en place des systèmes d'optimisation continue basés sur l'analyse des données"
                 ]
             }
         }
