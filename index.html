@@ -354,6 +354,8 @@
         // Global variables
         window.userResponses = {};
         window.answeredQuestions = 0;
+        window.totalQuestions = 0;
+        window.currentQuestionElement = null;
         window.currentResults = null;
         window.currentChartData = null;
         
@@ -442,7 +444,20 @@
                         
                         // Add event listener for this option
                         optionDiv.querySelector('input').addEventListener('change', function() {
-                            window.handleQuestionResponse(question.id, index);
+                            // Store response
+                            window.userResponses[question.id] = index;
+                            
+                            // Update progress
+                            window.answeredQuestions++;
+                            updateProgress();
+                            
+                            // Enable calculate button if all questions are answered
+                            if (window.answeredQuestions === window.totalQuestions) {
+                                document.getElementById('calculate-btn').disabled = false;
+                            }
+
+                            // Move to next question
+                            moveToNextQuestion(this.closest('.question-card'));
                         });
                         
                         optionsContainer.appendChild(optionDiv);
@@ -455,6 +470,16 @@
                 form.appendChild(section);
             });
         }
+
+        /**
+         * Move to the next question
+         */
+        window.moveToNextQuestion = function(currentQuestion) {
+            const nextQuestion = currentQuestion.nextElementSibling;
+            if (nextQuestion) {
+                nextQuestion.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
 
         /**
          * Handle when a user selects an answer to a question
@@ -1015,6 +1040,31 @@
         window.scrollToTop = function() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
+
+        /**
+         * Move to the next question after an answer is selected
+         * @param {HTMLElement} currentQuestionCard - The current question card element
+         */
+        function moveToNextQuestion(currentQuestionCard) {
+            const nextQuestionCard = currentQuestionCard.nextElementSibling;
+            if (nextQuestionCard && nextQuestionCard.classList.contains('question-card')) {
+                nextQuestionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // If we're at the last question in this practice area,
+                // find the next practice area's first question
+                const currentPracticeArea = currentQuestionCard.closest('.practice-area');
+                const nextPracticeArea = currentPracticeArea.nextElementSibling;
+                if (nextPracticeArea) {
+                    const firstQuestion = nextPracticeArea.querySelector('.question-card');
+                    if (firstQuestion) {
+                        firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Update the active practice area in the navigation
+                        const areaId = nextPracticeArea.id;
+                        document.querySelector(`#practice-areas-nav .nav-link[href="#${areaId}"]`).click();
+                    }
+                }
+            }
+        }
         
         /**
          * Format maturity level for display
