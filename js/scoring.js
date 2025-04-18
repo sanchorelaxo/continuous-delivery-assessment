@@ -1,11 +1,12 @@
 /**
- * Continuous Delivery Maturity Assessment Scoring Logic
- * 
- * This module handles:
- * - Calculating weighted scores for each practice area
- * - Determining maturity levels based on scores
- * - Generating radar chart data
- * - Creating CSV export
+ * Continuous Delivery Maturity Assessment - Scoring Module
+ *
+ * Responsibilities:
+ * - Compute weighted and normalized scores for each practice area
+ * - Map normalized scores (0-1) to maturity levels (-1 to 3)
+ * - Determine overall maturity level across practice areas
+ * - Generate radar chart data for Chart.js visualization
+ * - Export detailed assessment results as CSV
  */
 
 // questionDatabase is available from translations.js

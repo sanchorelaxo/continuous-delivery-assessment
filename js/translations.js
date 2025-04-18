@@ -1,3 +1,15 @@
+/**
+ * Translations object: organizes all text by language and category.
+ *
+ * Structure:
+ * - ui: UI labels (buttons, headings, tooltips).
+ * - questions: localized question text per practice area.
+ * - options: answer option text for each question.
+ * - practiceAreas: display names for each practice area.
+ *
+ * Usage:
+ *   window.translations[category][lang][key]
+ */
 window.translations = {
     ui: {
         en_CA: {
@@ -690,7 +702,7 @@ window.translations = {
                     text: "Implémentation du Contrôle de Version",
                     options: [
                         "Aucun système de contrôle de version en place",
-                        "Système de contrôle de version de base (ex: Git) avec code et scripts stockés",
+                        "Système de contrôle de version de base (ex: Git) avec stockage du code et des scripts",
                         "Contrôle de version avec stratégie de branches et fusions automatisées",
                         "Contrôle de version avancé avec bascules de fonctionnalités",
                         "Contrôle de version sophistiqué avec vérifications automatisées"
@@ -876,7 +888,7 @@ window.translations = {
                     text: "Automatisation des Tests",
                     options: [
                         "Tests manuels uniquement",
-                        "Tests unitaires automatisés de base",
+                        "Tests unitaires automatisés basiques",
                         "Suite complète de tests automatisés",
                         "Tests avancés avec performance et sécurité",
                         "Tests IA avec génération automatique"
@@ -1084,9 +1096,9 @@ window.translations = {
                     options: [
                         "Pas de traçage des requêtes",
                         "Suivi basique des requêtes",
-                        "Implémentation du traçage distribué",
-                        "Traçage avancé avec propagation",
-                        "Analyse des traces assistée par IA"
+                        "Traçage distribué",
+                        "Traçage full-stack avec contexte",
+                        "Analyse des traces améliorée par l'IA"
                     ]
                 },
                 OBS4: {
@@ -2158,30 +2170,17 @@ window.translations = {
                     ]
                 },
                 OBS2: {
-                    text: "Couverture de la Surveillance",
-                    weight: 3,
+                    text: "Journalisation",
                     options: [
-                        "Surveillance système basique",
-                        "Surveillance de l'infrastructure et des applications",
-                        "Surveillance de bout en bout",
-                        "Observabilité full-stack",
-                        "Surveillance pilotée par AIOps"
+                        "Pas de journalisation centralisée",
+                        "Journalisation applicative basique",
+                        "Agrégation centralisée des logs",
+                        "Analyse avancée et corrélation des logs",
+                        "Analytique IA des logs"
                     ]
                 },
                 OBS3: {
-                    text: "Collecte des Métriques",
-                    weight: 3,
-                    options: [
-                        "Pas de collecte de métriques",
-                        "Métriques de performance basiques",
-                        "Métriques personnalisées avec alertes",
-                        "Métriques complètes avec SLOs",
-                        "Analytique prédictive avec ML"
-                    ]
-                },
-                OBS4: {
-                    text: "Implémentation du Traçage",
-                    weight: 2,
+                    text: "Traçage",
                     options: [
                         "Pas de traçage des requêtes",
                         "Suivi basique des requêtes",
@@ -2190,26 +2189,34 @@ window.translations = {
                         "Analyse des traces améliorée par l'IA"
                     ]
                 },
-                OBS5: {
-                    text: "Stratégie d'Alerte",
-                    weight: 2,
+                OBS4: {
+                    text: "Métriques",
                     options: [
-                        "Vérifications manuelles du système",
-                        "Alertes basiques sur seuil",
-                        "Alertes intelligentes avec routage",
-                        "Réponse automatisée aux incidents",
-                        "Alertes prédictives basées sur le ML"
+                        "Pas de collecte de métriques",
+                        "Métriques de performance basiques",
+                        "Métriques complètes avec tableaux de bord",
+                        "Métriques avancées avec KPIs métier",
+                        "Analyse IA des métriques"
                     ]
                 },
-                OBS6: {
-                    text: "Capacités de Débogage",
-                    weight: 2,
+                OBS5: {
+                    text: "Débogage",
                     options: [
                         "Débogage manuel uniquement",
                         "Outils de débogage basiques",
+                        "Capacités de débogage à distance",
                         "Débogage avancé avec profilage",
-                        "Capacités de débogage en production",
-                        "Débogage assisté par l'IA"
+                        "Débogage assisté par IA"
+                    ]
+                },
+                OBS6: {
+                    text: "Gestion des Incidents",
+                    options: [
+                        "Pas de processus de gestion des incidents",
+                        "Suivi basique des incidents",
+                        "Réponse structurée aux incidents",
+                        "Analyse avancée des incidents",
+                        "Prévention des incidents par IA"
                     ]
                 }
             }
