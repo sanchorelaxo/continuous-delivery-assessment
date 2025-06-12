@@ -58,7 +58,7 @@
                         
                         <div class="card mt-3">
                             <div class="card-header">
-                                <span id="legend-title">Legend</span>
+                                <h3 class="mb-0" id="legend-title">Legend</h3>
                             </div>
                             <div class="card-body">
                                 <div><span class="question-weight weight-1" id="weight-standard">Standard</span> <span id="weight-normal">Normal weight</span></div>
@@ -84,37 +84,7 @@
                 <div class="col-md-9" data-bs-spy="scroll" data-bs-target="#practice-areas-nav" data-bs-offset="100" tabindex="0">
                     <form id="assessment-questions">
                         <!-- Section d'informations sur l'évaluation -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0" id="assessment-info-title">Assessment Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="author-email" class="form-label" id="author-email-label">Author Email <span class="text-danger">*</span></label>
-                                        <input type="email" class="form-control" id="author-email" name="authorEmail" required>
-                                        <div class="invalid-feedback" id="author-email-error">
-                                            Please enter a valid email address
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="team-name" class="form-label" id="team-name-label">Team/Squad Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="team-name" name="teamName" required minlength="2">
-                                        <div class="invalid-feedback" id="team-name-error">
-                                            This field is required
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="system-name" class="form-label" id="system-name-label">System Name</label>
-                                        <input type="text" class="form-control" id="system-name" name="systemName">
-                                        <small class="form-text text-muted" id="system-name-help">Optional</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Practice areas and questions will be dynamically inserted here -->
+                        
                     </form>
                 </div>
             </div>
@@ -223,6 +193,42 @@
         window.initializeAssessment = function() {
             const form = document.getElementById('assessment-questions');
             const currentLang = document.documentElement.lang;
+            const ui = translations.ui[currentLang];
+            
+            // Recréer la section d'informations sur l'évaluation
+            const infoSection = document.createElement('div');
+            infoSection.className = 'card mb-4';
+            infoSection.innerHTML = `
+                <div class="card-header">
+                    <h5 class="mb-0" id="assessment-info-title">${ui.assessmentInfo}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="author-email" class="form-label" id="author-email-label">${ui.authorEmail} <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="author-email" name="authorEmail" required placeholder="${ui.authorEmailPlaceholder}">
+                            <div class="invalid-feedback" id="author-email-error">
+                                ${ui.invalidEmail}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="team-name" class="form-label" id="team-name-label">${ui.teamName} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="team-name" name="teamName" required minlength="2" placeholder="${ui.teamNamePlaceholder}">
+                            <div class="invalid-feedback" id="team-name-error">
+                                ${ui.requiredField}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="system-name" class="form-label" id="system-name-label">${ui.systemName}</label>
+                            <input type="text" class="form-control" id="system-name" name="systemName" placeholder="${ui.systemNamePlaceholder}">
+                            <small class="form-text text-muted" id="system-name-help">${currentLang === 'fr_CA' ? 'Facultatif' : 'Optional'}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            form.appendChild(infoSection);
             
             // Total questions is already initialized
             
@@ -371,6 +377,13 @@
             // Store current responses
             const currentResponses = window.userResponses;
             
+            // Store current assessment info values
+            const currentAssessmentInfo = {
+                authorEmail: document.getElementById('author-email')?.value || '',
+                teamName: document.getElementById('team-name')?.value || '',
+                systemName: document.getElementById('system-name')?.value || ''
+            };
+            
             // Clear the form
             document.getElementById('assessment-questions').innerHTML = '';
             
@@ -402,32 +415,6 @@
             // Update section titles
             document.getElementById('practice-areas-title').textContent = ui.practiceAreas;
             
-            // Update assessment info section translations
-            const assessmentInfoTitle = document.getElementById('assessment-info-title');
-            const authorEmailLabel = document.getElementById('author-email-label');
-            const teamNameLabel = document.getElementById('team-name-label');
-            const systemNameLabel = document.getElementById('system-name-label');
-            const systemNameHelp = document.getElementById('system-name-help');
-            const authorEmailError = document.getElementById('author-email-error');
-            const teamNameError = document.getElementById('team-name-error');
-            
-            if (assessmentInfoTitle) assessmentInfoTitle.textContent = ui.assessmentInfo;
-            if (authorEmailLabel) authorEmailLabel.innerHTML = ui.authorEmail + ' <span class="text-danger">*</span>';
-            if (teamNameLabel) teamNameLabel.innerHTML = ui.teamName + ' <span class="text-danger">*</span>';
-            if (systemNameLabel) systemNameLabel.textContent = ui.systemName;
-            if (systemNameHelp) systemNameHelp.textContent = lang === 'fr_CA' ? 'Facultatif' : 'Optional';
-            if (authorEmailError) authorEmailError.textContent = ui.invalidEmail;
-            if (teamNameError) teamNameError.textContent = ui.requiredField;
-            
-            // Update placeholders
-            const authorEmailInput = document.getElementById('author-email');
-            const teamNameInput = document.getElementById('team-name');
-            const systemNameInput = document.getElementById('system-name');
-            
-            if (authorEmailInput) authorEmailInput.placeholder = ui.authorEmailPlaceholder;
-            if (teamNameInput) teamNameInput.placeholder = ui.teamNamePlaceholder;
-            if (systemNameInput) systemNameInput.placeholder = ui.systemNamePlaceholder;
-            
             // Clear existing scrollspy
             const scrollSpyContent = document.querySelector('.col-md-9');
             bootstrap.ScrollSpy.getInstance(scrollSpyContent)?.dispose();
@@ -437,6 +424,11 @@
             
             // Restore previous responses
             window.userResponses = currentResponses;
+            
+            // Restore previous assessment info values
+            document.getElementById('author-email').value = currentAssessmentInfo.authorEmail;
+            document.getElementById('team-name').value = currentAssessmentInfo.teamName;
+            document.getElementById('system-name').value = currentAssessmentInfo.systemName;
             
             // Update radio buttons based on stored responses
             Object.entries(currentResponses).forEach(([questionId, optionIndex]) => {
