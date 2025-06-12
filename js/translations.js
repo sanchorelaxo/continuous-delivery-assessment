@@ -52,7 +52,11 @@ window.translations = {
             systemName: "System Name",
             systemNamePlaceholder: "Enter system name (optional)",
             requiredField: "This field is required",
-            invalidEmail: "Please enter a valid email address"
+            invalidEmail: "Please enter a valid email address",
+            saveToConfluence: "Save to Confluence",
+            confluenceSaving: "Saving to Confluence...",
+            confluenceSuccess: "Successfully saved to Confluence!",
+            confluenceError: "Error saving to Confluence. Please try again."
         },
         fr_CA: {
             calculateResults: "Calculer les Résultats",
@@ -106,7 +110,11 @@ window.translations = {
             systemName: "Nom du Système",
             systemNamePlaceholder: "Entrez le nom du système (facultatif)",
             requiredField: "Ce champ est obligatoire",
-            invalidEmail: "Veuillez entrer une adresse courriel valide"
+            invalidEmail: "Veuillez entrer une adresse courriel valide",
+            saveToConfluence: "Sauvegarder dans Confluence",
+            confluenceSaving: "Sauvegarde dans Confluence...",
+            confluenceSuccess: "Sauvegardé avec succès dans Confluence !",
+            confluenceError: "Erreur lors de la sauvegarde dans Confluence. Veuillez réessayer."
         }
     },
     questionDatabase: {
