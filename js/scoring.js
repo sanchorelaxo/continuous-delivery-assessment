@@ -135,10 +135,20 @@ function generateRadarChartData(results) {
  * @param {Object} responses - User responses
  * @param {Object} results - Calculated results
  * @param {Object} questionDb - Question database
+ * @param {Object} assessmentInfo - Assessment information (authorEmail, teamName, systemName)
  * @returns {string} CSV formatted string
  */
-function generateCsvExport(responses, results, questionDb) {
-    let csv = 'practice_area,question_id,question_text,response_text,response_value,weight,weighted_score,max_score\n';
+function generateCsvExport(responses, results, questionDb, assessmentInfo = {}) {
+    // Ajouter les informations d'évaluation au début
+    let csv = 'Assessment Information\n';
+    csv += `Author Email,${assessmentInfo.authorEmail || ''}\n`;
+    csv += `Team/Squad Name,${assessmentInfo.teamName || ''}\n`;
+    csv += `System Name,${assessmentInfo.systemName || ''}\n`;
+    csv += `Assessment Date,${new Date().toISOString().split('T')[0]}\n`;
+    csv += '\n'; // Ligne vide pour séparer
+    
+    // En-tête des données détaillées
+    csv += 'practice_area,question_id,question_text,response_text,response_value,weight,weighted_score,max_score\n';
     
     // Process each practice area
     Object.entries(questionDb).forEach(([area, questions]) => {

@@ -42,17 +42,7 @@ window.translations = {
             recommendationDefined: "Focus on enhancing monitoring, metrics, and feedback loops.",
             recommendationMeasured: "Focus on optimization and predictive capabilities.",
             recommendationOptimizing: "Focus on innovation and maintaining your excellent practices.",
-                        scoringExplanation: "For each category:<br>1. Each question has a weight (1-3) and each answer has a value (maturity level -1 to 3)<br>2. For each question: weighted score = answer value × question weight<br>3. For each question: max possible score = 3 × question weight<br>4. For each practice area:<br>&nbsp;&nbsp;- Total weighted score = sum of all weighted scores<br>&nbsp;&nbsp;- Total max score = sum of all max possible scores<br>&nbsp;&nbsp;- Normalized score = (totalWeightedScore + totalMaxScore) / (2 × totalMaxScore)<br>&nbsp;&nbsp;- This normalized score (0-100%) maps to maturity levels:<br>&nbsp;&nbsp;&nbsp;&nbsp;* < 20% = -1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 20-40% = 0<br>&nbsp;&nbsp;&nbsp;&nbsp;* 40-60% = 1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 60-80% = 2<br>&nbsp;&nbsp;&nbsp;&nbsp;* > 80% = 3<br>5. The overall maturity level is the minimum (lowest) level across all practice areas<br><br>So it's not a simple average.",
-            // Nouveaux champs d'information
-            assessmentInfo: "Assessment Information",
-            authorEmail: "Author Email",
-            authorEmailPlaceholder: "Enter your email address",
-            teamName: "Team/Squad Name",
-            teamNamePlaceholder: "Enter your team or squad name",
-            systemName: "System Name",
-            systemNamePlaceholder: "Enter system name (optional)",
-            requiredField: "This field is required",
-            invalidEmail: "Please enter a valid email address"
+            scoringExplanation: "For each category:<br>1. Each question has a weight (1-3) and each answer has a value (maturity level -1 to 3)<br>2. For each question: weighted score = answer value × question weight<br>3. For each question: max possible score = 3 × question weight<br>4. For each practice area:<br>&nbsp;&nbsp;- Total weighted score = sum of all weighted scores<br>&nbsp;&nbsp;- Total max score = sum of all max possible scores<br>&nbsp;&nbsp;- Normalized score = (totalWeightedScore + totalMaxScore) / (2 × totalMaxScore)<br>&nbsp;&nbsp;- This normalized score (0-100%) maps to maturity levels:<br>&nbsp;&nbsp;&nbsp;&nbsp;* < 20% = -1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 20-40% = 0<br>&nbsp;&nbsp;&nbsp;&nbsp;* 40-60% = 1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 60-80% = 2<br>&nbsp;&nbsp;&nbsp;&nbsp;* > 80% = 3<br>5. The overall maturity level is the minimum (lowest) level across all practice areas<br><br>So it's not a simple average."
         },
         fr_CA: {
             calculateResults: "Calculer les Résultats",
@@ -96,17 +86,7 @@ window.translations = {
             recommendationDefined: "Concentrez-vous sur l'amélioration de la surveillance, des métriques et des boucles de rétroaction.",
             recommendationMeasured: "Concentrez-vous sur l'optimisation et les capacités prédictives.",
             recommendationOptimizing: "Concentrez-vous sur l'innovation et le maintien de vos excellentes pratiques.",
-                        scoringExplanation: "Pour chaque catégorie :<br>1. Chaque question a un poids (1-3) et chaque réponse a une valeur (niveau de maturité -1 à 3)<br>2. Pour chaque question : score pondéré = valeur de réponse × poids de la question<br>3. Pour chaque question : score maximum possible = 3 × poids de la question<br>4. Pour chaque domaine de pratique :<br>&nbsp;&nbsp;- Score pondéré total = somme de tous les scores pondérés<br>&nbsp;&nbsp;- Score maximum total = somme de tous les scores maximum possibles<br>&nbsp;&nbsp;- Score normalisé = (scorePondéréTotal + scoreMaximumTotal) / (2 × scoreMaximumTotal)<br>&nbsp;&nbsp;- Ce score normalisé (0-100%) correspond aux niveaux de maturité :<br>&nbsp;&nbsp;&nbsp;&nbsp;* < 20% = -1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 20-40% = 0<br>&nbsp;&nbsp;&nbsp;&nbsp;* 40-60% = 1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 60-80% = 2<br>&nbsp;&nbsp;&nbsp;&nbsp;* > 80% = 3<br>5. Le niveau de maturité global est le niveau minimum (le plus bas) de tous les domaines de pratique<br><br>Ce n'est donc pas une simple moyenne.",
-            // Nouveaux champs d'information
-            assessmentInfo: "Informations sur l'Évaluation",
-            authorEmail: "Courriel de l'Auteur",
-            authorEmailPlaceholder: "Entrez votre adresse courriel",
-            teamName: "Nom de l'Équipe/Escouade",
-            teamNamePlaceholder: "Entrez le nom de votre équipe ou escouade",
-            systemName: "Nom du Système",
-            systemNamePlaceholder: "Entrez le nom du système (facultatif)",
-            requiredField: "Ce champ est obligatoire",
-            invalidEmail: "Veuillez entrer une adresse courriel valide"
+            scoringExplanation: "Pour chaque catégorie :<br>1. Chaque question a un poids (1-3) et chaque réponse a une valeur (niveau de maturité -1 à 3)<br>2. Pour chaque question : score pondéré = valeur de réponse × poids de la question<br>3. Pour chaque question : score maximum possible = 3 × poids de la question<br>4. Pour chaque domaine de pratique :<br>&nbsp;&nbsp;- Score pondéré total = somme de tous les scores pondérés<br>&nbsp;&nbsp;- Score maximum total = somme de tous les scores maximum possibles<br>&nbsp;&nbsp;- Score normalisé = (scorePondéréTotal + scoreMaximumTotal) / (2 × scoreMaximumTotal)<br>&nbsp;&nbsp;- Ce score normalisé (0-100%) correspond aux niveaux de maturité :<br>&nbsp;&nbsp;&nbsp;&nbsp;* < 20% = -1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 20-40% = 0<br>&nbsp;&nbsp;&nbsp;&nbsp;* 40-60% = 1<br>&nbsp;&nbsp;&nbsp;&nbsp;* 60-80% = 2<br>&nbsp;&nbsp;&nbsp;&nbsp;* > 80% = 3<br>5. Le niveau de maturité global est le niveau minimum (le plus bas) de tous les domaines de pratique<br><br>Ce n'est donc pas une simple moyenne."
         }
     },
     questionDatabase: {
