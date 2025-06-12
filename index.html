@@ -489,9 +489,10 @@
             Object.entries(translations.questionDatabase).forEach(([area, questions]) => {
                 const link = document.createElement('a');
                 link.href = `#section-${area}`;
-                const title = translations.practiceAreas[lang][area.replace('-', '')] || area
-                    .replace(/([A-Z])/g, ' $1')
-                    .replace(/^./, str => str.toUpperCase());
+                const title = translations.practiceAreas[lang][area.replace('-', '')] || 
+                    (area === 'applicationArchitecture' ? 'Application Architecture' : 
+                    area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+                
                 link.className = 'nav-link';
                 link.textContent = title;
                 practiceAreasNav.appendChild(link);
@@ -574,6 +575,12 @@
             const teamName = document.getElementById('team-name');
             let hasInfoErrors = false;
             
+            // Vérifier que les éléments existent avant de les valider
+            if (!authorEmail || !teamName) {
+                console.error('Assessment info fields not found');
+                return;
+            }
+            
             // Valider l'email
             if (!authorEmail.value.trim()) {
                 authorEmail.classList.add('is-invalid');
@@ -597,7 +604,10 @@
             
             // Si erreurs dans les champs d'info, faire défiler vers le haut
             if (hasInfoErrors) {
-                document.getElementById('assessment-info-title').scrollIntoView({ behavior: 'smooth' });
+                const infoTitle = document.getElementById('assessment-info-title');
+                if (infoTitle) {
+                    infoTitle.scrollIntoView({ behavior: 'smooth' });
+                }
                 return;
             }
             
@@ -908,10 +918,14 @@
             const results = window.calculateScores(window.userResponses, translations.questionDatabase);
             
             // Récupérer les informations d'évaluation
+            const authorEmailEl = document.getElementById('author-email');
+            const teamNameEl = document.getElementById('team-name');
+            const systemNameEl = document.getElementById('system-name');
+            
             const assessmentInfo = {
-                authorEmail: document.getElementById('author-email').value,
-                teamName: document.getElementById('team-name').value,
-                systemName: document.getElementById('system-name').value
+                authorEmail: authorEmailEl ? authorEmailEl.value : 'Not provided',
+                teamName: teamNameEl ? teamNameEl.value : 'Not provided',
+                systemName: systemNameEl ? systemNameEl.value : ''
             };
             
             // Generate CSV content with assessment info
@@ -952,10 +966,14 @@
                 confluenceBtn.textContent = ui.confluenceSaving;
                 
                 // Get assessment information
+                const authorEmailEl = document.getElementById('author-email');
+                const teamNameEl = document.getElementById('team-name');
+                const systemNameEl = document.getElementById('system-name');
+                
                 const assessmentInfo = {
-                    authorEmail: document.getElementById('author-email').value,
-                    teamName: document.getElementById('team-name').value,
-                    systemName: document.getElementById('system-name').value
+                    authorEmail: authorEmailEl ? authorEmailEl.value : 'Not provided',
+                    teamName: teamNameEl ? teamNameEl.value : 'Not provided',
+                    systemName: systemNameEl ? systemNameEl.value : ''
                 };
                 
                 // Create the page title
