@@ -703,10 +703,10 @@
             document.querySelector('#results-container h2').textContent = ui.resultsTitle;
             
             // Display overall maturity level
-            const overallLevel = results.overall.maturityLevel;
-            document.getElementById('overall-level').textContent = window.formatMaturityLevel(overallLevel);
-            document.getElementById('overall-level').className = `maturity-level level-${overallLevel}`;
-            document.getElementById('overall-description').textContent = window.getMaturityDescription(overallLevel);
+            const overallMaturity = results.overall.maturityLevel;
+            document.getElementById('overall-level').textContent = window.formatMaturityLevel(overallMaturity);
+            document.getElementById('overall-level').className = `maturity-level level-${overallMaturity}`;
+            document.getElementById('overall-description').textContent = window.getMaturityDescription(overallMaturity);
             
             // Display practice area results
             const areaResultsList = document.getElementById('area-results');
