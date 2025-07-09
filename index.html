@@ -803,32 +803,37 @@
             
             // General recommendation based on overall level
             let generalRecommendation = '';
-            if (overallLevel === -1) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.initial}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationInitial}</p>
-                `;
-            } else if (overallLevel === 0) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.managed}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationManaged}</p>
-                `;
-            } else if (overallLevel === 1) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.defined}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationDefined}</p>
-                `;
-            } else if (overallLevel === 2) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.measured}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationMeasured}</p>
-                `;
-            } else if (overallLevel === 3) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.optimizing}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationOptimizing}</p>
-                `;
+            const maturityDescription = window.getMaturityDescription(overallLevel);
+            let recommendationText = '';
+            
+            // Use the same logic as getMaturityDescription
+            switch (overallLevel) {
+                case -1:
+                    recommendationText = uiText.recommendationInitial;
+                    break;
+                case 0:
+                    recommendationText = uiText.recommendationInitial;
+                    break;
+                case 1:
+                    recommendationText = uiText.recommendationManaged;
+                    break;
+                case 2:
+                    recommendationText = uiText.recommendationDefined;
+                    break;
+                case 3:
+                    recommendationText = uiText.recommendationMeasured;
+                    break;
+                case 4:
+                    recommendationText = uiText.recommendationOptimizing;
+                    break;
+                default:
+                    recommendationText = '';
             }
+            
+            generalRecommendation = `
+                <p>${uiText.recommendationPrefix} <strong>${maturityDescription}</strong> ${uiText.maturityLevelSuffix}. 
+                ${recommendationText}</p>
+            `;
             
             recommendationsContainer.innerHTML = generalRecommendation;
             
