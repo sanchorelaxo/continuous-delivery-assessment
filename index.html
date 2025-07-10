@@ -7,6 +7,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/translations.js"></script>
     <script src="js/scoring.js"></script>
     <link rel="stylesheet" href="css/styles.css">
@@ -57,7 +58,7 @@
                         
                         <div class="card mt-3">
                             <div class="card-header">
-                                <span id="legend-title">Legend</span>
+                                <h3 class="mb-0" id="legend-title">Legend</h3>
                             </div>
                             <div class="card-body">
                                 <div><span class="question-weight weight-1" id="weight-standard">Standard</span> <span id="weight-normal">Normal weight</span></div>
@@ -82,7 +83,8 @@
                 <!-- Questions -->
                 <div class="col-md-9" data-bs-spy="scroll" data-bs-target="#practice-areas-nav" data-bs-offset="100" tabindex="0">
                     <form id="assessment-questions">
-                        <!-- Practice areas and questions will be dynamically inserted here -->
+                        <!-- Section d'informations sur l'évaluation -->
+                        
                     </form>
                 </div>
             </div>
@@ -154,6 +156,7 @@
 
                         <div class="d-flex justify-content-center mt-4">
                             <button id="export-btn" class="btn btn-success me-2">Export as CSV</button>
+                            <button id="confluence-btn" class="btn btn-primary me-2">Save to Confluence</button>
                             <button id="restart-btn" class="btn btn-secondary">Start Over</button>
                         </div>
                     </div>
@@ -190,6 +193,42 @@
         window.initializeAssessment = function() {
             const form = document.getElementById('assessment-questions');
             const currentLang = document.documentElement.lang;
+            const ui = translations.ui[currentLang];
+            
+            // Recréer la section d'informations sur l'évaluation
+            const infoSection = document.createElement('div');
+            infoSection.className = 'card mb-4';
+            infoSection.innerHTML = `
+                <div class="card-header">
+                    <h5 class="mb-0" id="assessment-info-title">${ui.assessmentInfo}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="author-email" class="form-label" id="author-email-label">${ui.authorEmail} <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="author-email" name="authorEmail" required placeholder="${ui.authorEmailPlaceholder}">
+                            <div class="invalid-feedback" id="author-email-error">
+                                ${ui.invalidEmail}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="team-name" class="form-label" id="team-name-label">${ui.teamName} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="team-name" name="teamName" required minlength="2" placeholder="${ui.teamNamePlaceholder}">
+                            <div class="invalid-feedback" id="team-name-error">
+                                ${ui.requiredField}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="system-name" class="form-label" id="system-name-label">${ui.systemName}</label>
+                            <input type="text" class="form-control" id="system-name" name="systemName" placeholder="${ui.systemNamePlaceholder}">
+                            <small class="form-text text-muted" id="system-name-help">${currentLang === 'fr_CA' ? 'Facultatif' : 'Optional'}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            form.appendChild(infoSection);
             
             // Total questions is already initialized
             
@@ -338,6 +377,13 @@
             // Store current responses
             const currentResponses = window.userResponses;
             
+            // Store current assessment info values
+            const currentAssessmentInfo = {
+                authorEmail: document.getElementById('author-email')?.value || '',
+                teamName: document.getElementById('team-name')?.value || '',
+                systemName: document.getElementById('system-name')?.value || ''
+            };
+            
             // Clear the form
             document.getElementById('assessment-questions').innerHTML = '';
             
@@ -362,6 +408,9 @@
             
             // Update buttons
             document.getElementById('calculate-btn').textContent = ui.calculateResults;
+            document.getElementById('export-btn').textContent = ui.exportCsv;
+            document.getElementById('confluence-btn').textContent = ui.saveToConfluence;
+            document.getElementById('restart-btn').textContent = ui.restart;
             
             // Update section titles
             document.getElementById('practice-areas-title').textContent = ui.practiceAreas;
@@ -375,6 +424,11 @@
             
             // Restore previous responses
             window.userResponses = currentResponses;
+            
+            // Restore previous assessment info values
+            document.getElementById('author-email').value = currentAssessmentInfo.authorEmail;
+            document.getElementById('team-name').value = currentAssessmentInfo.teamName;
+            document.getElementById('system-name').value = currentAssessmentInfo.systemName;
             
             // Update radio buttons based on stored responses
             Object.entries(currentResponses).forEach(([questionId, optionIndex]) => {
@@ -430,6 +484,7 @@
                 const title = translations.practiceAreas[lang][area.replace('-', '')] || 
                     (area === 'applicationArchitecture' ? 'Application Architecture' : 
                     area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+                
                 link.className = 'nav-link';
                 link.textContent = title;
                 practiceAreasNav.appendChild(link);
@@ -454,6 +509,7 @@
             document.getElementById('calculate-btn').addEventListener('click', window.validateAndCalculate);
             document.getElementById('restart-btn').addEventListener('click', window.restartAssessment);
             document.getElementById('export-btn').addEventListener('click', window.exportResultsAsCsv);
+            document.getElementById('confluence-btn').addEventListener('click', window.saveToConfluence);
             document.getElementById('scroll-top').addEventListener('click', window.scrollToTop);
             
             // Initialize with English
@@ -505,6 +561,47 @@
             const unanswered = window.getUnansweredQuestions();
             const validationMessages = document.getElementById('validation-messages');
             const currentLang = document.documentElement.lang;
+            
+            // Validation des champs d'information obligatoires
+            const authorEmail = document.getElementById('author-email');
+            const teamName = document.getElementById('team-name');
+            let hasInfoErrors = false;
+            
+            // Vérifier que les éléments existent avant de les valider
+            if (!authorEmail || !teamName) {
+                console.error('Assessment info fields not found');
+                return;
+            }
+            
+            // Valider l'email
+            if (!authorEmail.value.trim()) {
+                authorEmail.classList.add('is-invalid');
+                hasInfoErrors = true;
+            } else if (!authorEmail.checkValidity()) {
+                authorEmail.classList.add('is-invalid');
+                hasInfoErrors = true;
+            } else {
+                authorEmail.classList.remove('is-invalid');
+                authorEmail.classList.add('is-valid');
+            }
+            
+            // Valider le nom d'équipe
+            if (!teamName.value.trim() || teamName.value.trim().length < 2) {
+                teamName.classList.add('is-invalid');
+                hasInfoErrors = true;
+            } else {
+                teamName.classList.remove('is-invalid');
+                teamName.classList.add('is-valid');
+            }
+            
+            // Si erreurs dans les champs d'info, faire défiler vers le haut
+            if (hasInfoErrors) {
+                const infoTitle = document.getElementById('assessment-info-title');
+                if (infoTitle) {
+                    infoTitle.scrollIntoView({ behavior: 'smooth' });
+                }
+                return;
+            }
             
             if (unanswered.length > 0) {
                 // Show validation message
@@ -606,10 +703,10 @@
             document.querySelector('#results-container h2').textContent = ui.resultsTitle;
             
             // Display overall maturity level
-            const overallLevel = results.overall.maturityLevel;
-            document.getElementById('overall-level').textContent = window.formatMaturityLevel(overallLevel);
-            document.getElementById('overall-level').className = `maturity-level level-${overallLevel}`;
-            document.getElementById('overall-description').textContent = window.getMaturityDescription(overallLevel);
+            const overallMaturity = results.overall.maturityLevel;
+            document.getElementById('overall-level').textContent = window.formatMaturityLevel(overallMaturity);
+            document.getElementById('overall-level').className = `maturity-level level-${overallMaturity}`;
+            document.getElementById('overall-description').textContent = window.getMaturityDescription(overallMaturity);
             
             // Display practice area results
             const areaResultsList = document.getElementById('area-results');
@@ -641,7 +738,12 @@
             
             // Update buttons
             document.getElementById('export-btn').textContent = ui.exportCsv;
+            document.getElementById('confluence-btn').textContent = ui.saveToConfluence;
             document.getElementById('restart-btn').textContent = ui.restart;
+            
+            // Update scroll to top button text
+            const scrollTopBtn = document.getElementById('scroll-top');
+            scrollTopBtn.innerHTML = `<i class="bi bi-arrow-up"></i> ${translations.ui[lang].scrollToTop}`;
         };
         
         /**
@@ -701,32 +803,34 @@
             
             // General recommendation based on overall level
             let generalRecommendation = '';
-            if (overallLevel === -1) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.initial}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationInitial}</p>
-                `;
-            } else if (overallLevel === 0) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.managed}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationManaged}</p>
-                `;
-            } else if (overallLevel === 1) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.defined}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationDefined}</p>
-                `;
-            } else if (overallLevel === 2) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.measured}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationMeasured}</p>
-                `;
-            } else if (overallLevel === 3) {
-                generalRecommendation = `
-                    <p>${uiText.recommendationPrefix} <strong>${uiText.optimizing}</strong> ${uiText.maturityLevelSuffix}. 
-                    ${uiText.recommendationOptimizing}</p>
-                `;
+            const maturityDescription = window.getMaturityDescription(overallLevel);
+            let recommendationText = '';
+            
+            // Correspondance correcte entre niveaux de maturité et recommandations
+            switch (overallLevel) {
+                case -1:
+                    recommendationText = uiText.recommendationInitial;
+                    break;
+                case 0:
+                    recommendationText = uiText.recommendationManaged;
+                    break;
+                case 1:
+                    recommendationText = uiText.recommendationDefined;
+                    break;
+                case 2:
+                    recommendationText = uiText.recommendationMeasured;
+                    break;
+                case 3:
+                    recommendationText = uiText.recommendationOptimizing;
+                    break;
+                default:
+                    recommendationText = '';
             }
+            
+            generalRecommendation = `
+                <p>${uiText.recommendationPrefix} <strong>${maturityDescription}</strong> ${uiText.maturityLevelSuffix}. 
+                ${recommendationText}</p>
+            `;
             
             recommendationsContainer.innerHTML = generalRecommendation;
             
@@ -807,8 +911,19 @@
             // Calculate results again to ensure we have the latest data
             const results = window.calculateScores(window.userResponses, translations.questionDatabase);
             
-            // Generate CSV content
-            const csvContent = window.generateCsvExport(window.userResponses, results, translations.questionDatabase);
+            // Récupérer les informations d'évaluation
+            const authorEmailEl = document.getElementById('author-email');
+            const teamNameEl = document.getElementById('team-name');
+            const systemNameEl = document.getElementById('system-name');
+            
+            const assessmentInfo = {
+                authorEmail: authorEmailEl ? authorEmailEl.value : 'Not provided',
+                teamName: teamNameEl ? teamNameEl.value : 'Not provided',
+                systemName: systemNameEl ? systemNameEl.value : ''
+            };
+            
+            // Generate CSV content with assessment info
+            const csvContent = window.generateCsvExport(window.userResponses, results, translations.questionDatabase, assessmentInfo);
             
             // Create a blob with the CSV content
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -817,13 +932,141 @@
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             
+            // Générer un nom de fichier avec la date et l'équipe
+            const today = new Date().toISOString().split('T')[0];
+            const teamSlug = assessmentInfo.teamName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            const filename = `cd-assessment-${teamSlug}-${today}.csv`;
+            
             link.setAttribute('href', url);
-            link.setAttribute('download', 'continuous_delivery_maturity_assessment.csv');
+            link.setAttribute('download', filename);
             link.style.visibility = 'hidden';
             
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        };
+        
+        /**
+         * Save assessment results to Confluence
+         */
+        window.saveToConfluence = async function() {
+            const ui = translations.ui[window.currentLang];
+            const confluenceBtn = document.getElementById('confluence-btn');
+            const originalText = confluenceBtn.textContent;
+            
+            try {
+                // Disable button and show loading state
+                confluenceBtn.disabled = true;
+                confluenceBtn.textContent = ui.confluenceSaving;
+                
+                // Get assessment information
+                const authorEmailEl = document.getElementById('author-email');
+                const teamNameEl = document.getElementById('team-name');
+                const systemNameEl = document.getElementById('system-name');
+                
+                const assessmentInfo = {
+                    authorEmail: authorEmailEl ? authorEmailEl.value : 'Not provided',
+                    teamName: teamNameEl ? teamNameEl.value : 'Not provided',
+                    systemName: systemNameEl ? systemNameEl.value : ''
+                };
+                
+                // Create the page title
+                const today = new Date().toLocaleDateString();
+                const pageTitle = `CD Maturity Assessment - ${assessmentInfo.teamName} - ${today}`;
+                
+                // Get the results data for structured content
+                const results = window.calculateScores(window.userResponses, translations.questionDatabase);
+                
+                // Create structured Confluence content in Markdown format
+                let confluenceContent = `# ${pageTitle}
+
+## Assessment Information
+- **Author:** ${assessmentInfo.authorEmail}
+- **Team/Squad:** ${assessmentInfo.teamName}
+- **System:** ${assessmentInfo.systemName || 'Not specified'}
+- **Assessment Date:** ${today}
+
+## Overall Maturity Level
+**Level ${results.overall.maturityLevel}** - ${window.getMaturityDescription(results.overall.maturityLevel)}
+
+## Practice Area Results
+`;
+
+                // Add practice area results
+                Object.entries(results).forEach(([area, result]) => {
+                    if (area === 'overall') return;
+                    
+                    const formattedArea = area
+                        .replace(/([A-Z])/g, ' $1')
+                        .replace(/^./, str => str.toUpperCase());
+                    
+                    confluenceContent += `### ${formattedArea}
+- **Maturity Level:** ${result.maturityLevel}
+- **Score:** ${result.rawScore}/${result.maxPossibleScore}
+- **Percentage:** ${Math.round(result.normalizedScore * 100)}%
+
+`;
+                });
+
+                // Add recommendations
+                const recommendations = window.generateRecommendations(results);
+                confluenceContent += `## Recommendations
+
+${recommendations}
+
+---
+
+*This assessment was generated using the Continuous Delivery Maturity Assessment Tool*
+`;
+                
+                // Try to use MCP Confluence integration first
+                if (typeof mcp2_confluence_create_page === 'function') {
+                    const response = await mcp2_confluence_create_page({
+                        space_key: 'TEAM', // This should be configurable
+                        title: pageTitle,
+                        content: confluenceContent
+                    });
+                    
+                    // Show success message
+                    confluenceBtn.textContent = ui.confluenceSuccess;
+                    confluenceBtn.classList.remove('btn-primary');
+                    confluenceBtn.classList.add('btn-success');
+                } else {
+                    // Fallback: Copy content to clipboard and show instructions
+                    await navigator.clipboard.writeText(confluenceContent);
+                    
+                    // Show instructions modal or alert
+                    alert(`${ui.confluenceSuccess}\n\nThe content has been copied to your clipboard. Please:\n1. Go to your Confluence space\n2. Create a new page\n3. Paste the content\n4. Save the page`);
+                    
+                    confluenceBtn.textContent = 'Copied to Clipboard!';
+                    confluenceBtn.classList.remove('btn-primary');
+                    confluenceBtn.classList.add('btn-success');
+                }
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    confluenceBtn.textContent = originalText;
+                    confluenceBtn.classList.remove('btn-success');
+                    confluenceBtn.classList.add('btn-primary');
+                    confluenceBtn.disabled = false;
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error saving to Confluence:', error);
+                
+                // Show error message
+                confluenceBtn.textContent = ui.confluenceError;
+                confluenceBtn.classList.remove('btn-primary');
+                confluenceBtn.classList.add('btn-danger');
+                
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    confluenceBtn.textContent = originalText;
+                    confluenceBtn.classList.remove('btn-danger');
+                    confluenceBtn.classList.add('btn-primary');
+                    confluenceBtn.disabled = false;
+                }, 3000);
+            }
         };
         
         /**
