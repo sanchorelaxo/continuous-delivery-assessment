@@ -6,13 +6,43 @@
     <title>Continuous Delivery Maturity Assessment</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/translations.js"></script>
     <script src="js/scoring.js"></script>
+    <script src="js/db-integration.js"></script>
+    <script src="js/auth/auth-service.js"></script>
+    <script src="js/auth/auth-ui.js"></script>
+    <script src="js/auth/assessment-history.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">CD Assessment</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="nav-assessment">Assessment</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-history">History</a>
+                    </li>
+                    <li class="nav-item admin-only d-none">
+                        <a class="nav-link" href="#" id="nav-admin">Admin</a>
+                    </li>
+                </ul>
+                <!-- Auth dropdown will be inserted here by auth-ui.js -->
+            </div>
+        </div>
+    </nav>
+    
     <div class="header text-center">
         <div class="container">
             <h1>Continuous Delivery Maturity Assessment</h1>
@@ -90,6 +120,11 @@
             </div>
         </div>
         
+        <!-- Admin Dashboard Container -->
+        <div id="admin-dashboard-container" style="display: none;">
+            <!-- Admin dashboard content will be dynamically inserted here -->
+        </div>
+        
         <!-- Results Container -->
         <div id="results-container">
             <div class="row">
@@ -127,6 +162,12 @@
                                         <h3 class="mb-0" id="radar-title">Maturity Radar</h3>
                                     </div>
                                     <div class="card-body">
+                                        <div class="d-flex justify-content-end mb-2 results-toggle-container">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="show-cumulative-results">
+                                                <label class="form-check-label" for="show-cumulative-results">Show cumulative results</label>
+                                            </div>
+                                        </div>
                                         <div class="radar-chart-container">
                                             <canvas id="radar-chart"></canvas>
                                         </div>
@@ -175,6 +216,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/translations.js"></script>
     <script src="js/scoring.js"></script>
+    <script src="js/db-integration.js"></script>
     <script>
         // Global variables
         window.userResponses = {};
@@ -207,6 +249,9 @@
                         <div class="col-md-6 mb-3">
                             <label for="author-email" class="form-label" id="author-email-label">${ui.authorEmail} <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="author-email" name="authorEmail" required placeholder="${ui.authorEmailPlaceholder}">
+                            <div class="form-text" id="author-email-help">
+                                <span class="d-none" id="auth-email-message">Using your account email</span>
+                            </div>
                             <div class="invalid-feedback" id="author-email-error">
                                 ${ui.invalidEmail}
                             </div>
@@ -330,6 +375,11 @@
                 
                 form.appendChild(section);
             });
+            
+            // Now that the form is fully initialized, update the email field
+            if (typeof window.updateEmailFieldFromAuth === 'function') {
+                window.updateEmailFieldFromAuth();
+            }
         }
 
         /**
@@ -503,6 +553,19 @@
         
         // Initialize when document is ready
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize authentication UI
+            window.authUI.init();
+            
+            // Initialize assessment history UI
+            window.assessmentHistoryUI.init();
+            
+            // Auto-fill email field if user is logged in
+            updateEmailFieldFromAuth();
+            
+            // Listen for login/logout events to update email field
+            document.addEventListener('auth:login', updateEmailFieldFromAuth);
+            document.addEventListener('auth:logout', updateEmailFieldFromAuth);
+            
             // Initialize current language
             window.currentLang = 'en_CA';
             // Add event listeners
@@ -688,22 +751,293 @@
             document.getElementById('assessment-form').style.display = 'none';
             document.getElementById('results-container').style.display = 'block';
             
+            // Save data to MongoDB if the feature is enabled
+            try {
+                window.dbIntegration.saveToMongoDB(window.userResponses, results)
+                    .then(response => {
+                        if (response.feature_disabled) {
+                            console.log('MongoDB integration is disabled. Data not saved.');
+                        } else if (response.success) {
+                            console.log('Assessment saved to MongoDB:', response);
+                            // Store the MongoDB ID for potential future reference
+                            window.currentAssessmentId = response.data._id;
+                            
+                            // Show success message if user is authenticated
+                            if (window.authService && window.authService.isAuthenticated()) {
+                                const alertDiv = document.createElement('div');
+                                alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+                                alertDiv.innerHTML = `
+                                    Assessment saved successfully! You can view it in your <a href="#" onclick="window.assessmentHistoryUI.showHistory(event); return false;">assessment history</a>.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                `;
+                                document.querySelector('#results-container .results-card').prepend(alertDiv);
+                            }
+                        } else {
+                            console.warn('MongoDB save returned without success:', response);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to save to MongoDB:', error);
+                    });
+            } catch (error) {
+                console.error('Error attempting to save to MongoDB:', error);
+            }
+            
+            // Store current results for potential language switching
+            window.currentResults = results;
+            window.currentChartData = chartData;
+            
+            // Set up cumulative results toggle event handler
+            document.getElementById('show-cumulative-results').addEventListener('change', function(event) {
+                if (event.target.checked) {
+                    // Make sure we have a radar chart container before loading cumulative results
+                    const radarChartContainer = document.querySelector('.radar-chart-container');
+                    if (!radarChartContainer) {
+                        console.error('Radar chart container not found');
+                        event.target.checked = false;
+                        return;
+                    }
+                    
+                    // Clear any existing error messages
+                    const existingAlerts = radarChartContainer.querySelectorAll('.alert');
+                    existingAlerts.forEach(alert => alert.remove());
+                    
+                    // Load cumulative results
+                    loadCumulativeResults();
+                } else {
+                    // Restore current results
+                    if (window.radarChart) {
+                        window.radarChart.destroy();
+                    }
+                    if (window.currentChartData) {
+                        window.createRadarChart(window.currentChartData);
+                    } else {
+                        console.error('No current chart data available');
+                    }
+                }
+            });
+            
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            return results;
         };
+        
+        /**
+         * Load and display cumulative results from previous assessments
+         */
+        function loadCumulativeResults() {
+            // Check if user is authenticated
+            if (!window.authService || !window.authService.isAuthenticated()) {
+                // Show login prompt
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-info alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    Please <a href="#" onclick="window.authUI.showLoginModal(); return false;">login</a> 
+                    or <a href="#" onclick="window.authUI.showRegisterModal(); return false;">register</a> 
+                    to view cumulative results.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                document.querySelector('.results-toggle-container').after(alertDiv);
+                
+                // Uncheck the toggle
+                document.getElementById('show-cumulative-results').checked = false;
+                return;
+            }
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'text-center my-3';
+            loadingDiv.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+            document.querySelector('.radar-chart-container').prepend(loadingDiv);
+            
+            // Get all user assessments
+            window.dbIntegration.getAllAssessments(1, 100, true)
+                .then(response => {
+                    // Remove loading indicator
+                    loadingDiv.remove();
+                    
+                    if (!response.success || !response.data || !response.data.assessments || response.data.assessments.length === 0) {
+                        // Show error message
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+                        alertDiv.innerHTML = `
+                            No previous assessments found. This view shows your current assessment only.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        `;
+                        document.querySelector('.radar-chart-container').prepend(alertDiv);
+                        
+                        // Uncheck the toggle
+                        document.getElementById('show-cumulative-results').checked = false;
+                        return;
+                    }
+                    
+                    // Calculate average maturity levels across all assessments
+                    const assessments = response.data.assessments;
+                    
+                    // If currentResults doesn't exist, this is a bug - log it and try to recover
+                    if (!window.currentResults || !window.currentResults.practiceAreas) {
+                        console.error('Bug detected: window.currentResults should be set but is not available');
+                        
+                        // Try to recover by using the most recent assessment
+                        const sortedAssessments = [...assessments].sort((a, b) => {
+                            return new Date(b.date) - new Date(a.date);
+                        });
+                        
+                        const mostRecent = sortedAssessments[0];
+                        if (mostRecent && mostRecent.results && mostRecent.results.practiceAreas) {
+                            console.log('Recovering by using most recent assessment');
+                            window.currentResults = mostRecent.results;
+                            window.currentChartData = {
+                                labels: Object.keys(mostRecent.results.practiceAreas),
+                                datasets: [{
+                                    label: 'Maturity Level',
+                                    data: Object.values(mostRecent.results.practiceAreas).map(area => area.maturityLevel),
+                                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 2,
+                                    pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+                                }]
+                            };
+                        } else {
+                            // Show error message - this should never happen if there are assessments
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                            alertDiv.innerHTML = `
+                                Error loading cumulative results: Assessment data is incomplete.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            `;
+                            document.querySelector('.radar-chart-container').prepend(alertDiv);
+                            
+                            // Uncheck the toggle
+                            document.getElementById('show-cumulative-results').checked = false;
+                            return;
+                        }
+                    }
+                    
+                    const practiceAreas = Object.keys(window.currentResults.practiceAreas);
+                    const cumulativeData = {};
+                    
+                    // Initialize cumulative data structure
+                    practiceAreas.forEach(area => {
+                        cumulativeData[area] = {
+                            totalLevel: 0,
+                            count: 0
+                        };
+                    });
+                    
+                    // Sum up maturity levels from all assessments
+                    assessments.forEach(assessment => {
+                        if (assessment.results && assessment.results.practiceAreas) {
+                            practiceAreas.forEach(area => {
+                                if (assessment.results.practiceAreas[area]) {
+                                    cumulativeData[area].totalLevel += assessment.results.practiceAreas[area].maturityLevel;
+                                    cumulativeData[area].count++;
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Calculate averages
+                    const averageMaturityLevels = {};
+                    practiceAreas.forEach(area => {
+                        if (cumulativeData[area].count > 0) {
+                            averageMaturityLevels[area] = cumulativeData[area].totalLevel / cumulativeData[area].count;
+                        } else {
+                            averageMaturityLevels[area] = 0;
+                        }
+                    });
+                    
+                    // Create chart data for cumulative results
+                    const cumulativeChartData = {
+                        labels: practiceAreas,
+                        datasets: [
+                            {
+                                label: 'Current Assessment',
+                                data: practiceAreas.map(area => {
+                                    // Safely access maturity level with fallback to 0
+                                    return window.currentResults.practiceAreas[area] && 
+                                           typeof window.currentResults.practiceAreas[area].maturityLevel !== 'undefined' ? 
+                                           window.currentResults.practiceAreas[area].maturityLevel : 0;
+                                }),
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+                            },
+                            {
+                                label: 'Average (All Assessments)',
+                                data: practiceAreas.map(area => {
+                                    // Safely access average maturity level with fallback to 0
+                                    return typeof averageMaturityLevels[area] !== 'undefined' ? 
+                                           averageMaturityLevels[area] : 0;
+                                }),
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(255, 99, 132, 1)'
+                            }
+                        ]
+                    };
+                    
+                    // Update chart
+                    if (window.radarChart) {
+                        window.radarChart.destroy();
+                    }
+                    window.createRadarChart(cumulativeChartData);
+                    
+                    // Show assessment count
+                    const countDiv = document.createElement('div');
+                    countDiv.className = 'text-center text-muted mt-2 assessment-count';
+                    countDiv.innerHTML = `Based on ${assessments.length} assessment${assessments.length !== 1 ? 's' : ''}`;
+                    document.querySelector('.radar-chart-container').append(countDiv);
+                })
+                .catch(error => {
+                    // Remove loading indicator
+                    loadingDiv.remove();
+                    
+                    // Show error message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        Error loading cumulative results: ${error.message || 'Unknown error'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    document.querySelector('.radar-chart-container').prepend(alertDiv);
+                    
+                    // Uncheck the toggle
+                    document.getElementById('show-cumulative-results').checked = false;
+                });
+        }
         
         /**
          * Display the assessment results
          */
         window.displayResults = function(results, chartData) {
-            const lang = document.documentElement.lang;
+            // Handle null or undefined results
+            if (!results) {
+                console.warn('Results object is null or undefined');
+                return;
+            }
+            
+            const lang = document.documentElement.lang || 'en';
             const ui = translations.ui[lang];
             
             // Update title
             document.querySelector('#results-container h2').textContent = ui.resultsTitle;
             
+            // Calculate overall maturity if not present
+            let overallMaturity = 0;
+            
+            if (results.overall && results.overall.maturityLevel !== undefined) {
+                // Use existing overall maturity
+                overallMaturity = results.overall.maturityLevel;
+            } else {
+                // Calculate from practice areas
+                overallMaturity = window.calculateOverallMaturity(results);
+            }
+            
             // Display overall maturity level
-            const overallMaturity = results.overall.maturityLevel;
             document.getElementById('overall-level').textContent = window.formatMaturityLevel(overallMaturity);
             document.getElementById('overall-level').className = `maturity-level level-${overallMaturity}`;
             document.getElementById('overall-description').textContent = window.getMaturityDescription(overallMaturity);
@@ -1130,6 +1464,43 @@ ${recommendations}
                         const areaId = nextPracticeArea.id;
                         document.querySelector(`#practice-areas-nav .nav-link[href="#${areaId}"]`).click();
                     }
+                }
+            }
+        }
+        
+        /**
+         * Update email field based on authentication status
+         * If user is logged in, use their email and disable the field
+         * If user is logged out, enable the field for manual entry
+         */
+        window.updateEmailFieldFromAuth = function() {
+            const emailField = document.getElementById('author-email');
+            const emailHelpText = document.getElementById('auth-email-message');
+            
+            // If elements don't exist yet, exit early
+            if (!emailField || !emailHelpText) {
+                console.log('Email field or help text not found in DOM yet, will update later');
+                return;
+            }
+            
+            if (window.authService.isAuthenticated()) {
+                const currentUser = window.authService.getCurrentUser();
+                if (currentUser && currentUser.email) {
+                    // User is logged in, use their email
+                    emailField.value = currentUser.email;
+                    emailField.setAttribute('readonly', 'readonly');
+                    emailField.classList.add('bg-light');
+                    emailHelpText.classList.remove('d-none');
+                }
+            } else {
+                // User is not logged in, enable field for manual entry
+                emailField.removeAttribute('readonly');
+                emailField.classList.remove('bg-light');
+                emailHelpText.classList.add('d-none');
+                
+                // Only clear if not part of a saved assessment
+                if (!window.currentAssessmentInfo || !window.currentAssessmentInfo.authorEmail) {
+                    emailField.value = '';
                 }
             }
         }

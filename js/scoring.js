@@ -98,12 +98,35 @@ function mapScoreToMaturityLevel(normalizedScore) {
  * @returns {Object} Data formatted for radar chart
  */
 function generateRadarChartData(results) {
-    // Remove the overall result before processing
-    const { overall, ...practiceAreaResults } = results;
+    // Handle null or undefined results
+    if (!results) {
+        console.warn('Results object is null or undefined');
+        return {
+            labels: [],
+            datasets: [{
+                label: 'Maturity Level',
+                data: [],
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+            }]
+        };
+    }
+    
+    // Safely extract practice area results without destructuring
+    const practiceAreaResults = {};
+    Object.keys(results).forEach(key => {
+        if (key !== 'overall') {
+            practiceAreaResults[key] = results[key];
+        }
+    });
     
     const labels = [];
     const data = [];
-    const lang = document.documentElement.lang;
+    const lang = document.documentElement.lang || 'en';
     
     // Convert maturity levels to positive numbers for visualization
     // (-1 becomes 0, 0 becomes 1, 1 becomes 2, etc.)
