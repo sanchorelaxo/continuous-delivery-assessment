@@ -7,8 +7,9 @@ const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const mongoConfig = require('./config/mongodb');
-require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -35,17 +36,20 @@ app.use(express.static('./'));
 
 // MongoDB connection
 let db = null;
+let client = null;
 
 // Connect to MongoDB if enabled
 if (mongoConfig.enabled) {
   console.log('Attempting to connect to MongoDB...');
   MongoClient.connect(mongoConfig.uri, mongoConfig.options)
-    .then(client => {
+    .then(mongoClient => {
       console.log('Connected to MongoDB successfully');
+      client = mongoClient; // Store client in the outer scope
       db = client.db();
       
       // Make db available to route handlers
       app.locals.db = db;
+      app.locals.client = client; // Make client available to route handlers
       
       // Create indexes for better performance
       db.collection('assessments').createIndex({ timestamp: -1 })
@@ -491,8 +495,8 @@ async function startServer() {
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
     console.log('Shutting down server...');
-    if (mongoClient) {
-      await mongoClient.close();
+    if (client) {
+      await client.close();
       console.log('MongoDB connection closed');
     }
     process.exit(0);
@@ -684,23 +688,25 @@ app.post('/api/assessments/compare', optionalAuth, async (req, res) => {
       'rgba(99, 255, 132, 0.7)'     // Mint
     ];
     
-    // Extract all unique categories from all assessments
-    const allCategories = new Set();
-    assessments.forEach(assessment => {
-      if (assessment.results && assessment.results.categories) {
-        Object.keys(assessment.results.categories).forEach(category => {
-          allCategories.add(category);
-        });
-      }
+    // Define standard practice areas
+    const practiceAreas = [
+      'buildManagement', 'environments', 'releaseManagement', 'testing',
+      'dataManagement', 'configurationManagement', 'applicationArchitecture', 'observability'
+    ];
+    
+    // Format practice area labels for display
+    const formattedLabels = practiceAreas.map(area => {
+      return area.replace(/([A-Z])/g, ' $1').trim();
     });
     
-    // Convert to array and sort alphabetically
-    comparisonData.labels = Array.from(allCategories).sort();
+    // Set labels for the radar chart
+    comparisonData.labels = formattedLabels;
     
     // Create a dataset for each assessment
     assessments.forEach((assessment, index) => {
       const color = standardColors[index % standardColors.length];
-      const borderColor = color.replace('0.7', '1');
+      // Set border color with 75% transparency (0.75)
+      const borderColor = color.replace('0.7', '0.75');
       
       // Format date for display
       const date = assessment.createdAt || assessment.timestamp;
@@ -714,18 +720,22 @@ app.post('/api/assessments/compare', optionalAuth, async (req, res) => {
       
       const dataset = {
         label,
-        backgroundColor: color,
+        backgroundColor: 'transparent', // Make background transparent
         borderColor,
-        borderWidth: 1,
+        borderWidth: 2, // Slightly thicker lines
+        pointBackgroundColor: borderColor,
+        pointRadius: 3, // Make points more visible
+        pointHoverRadius: 5,
+        fill: false, // Don't fill the area
         data: []
       };
       
-      // Fill in data points for each category
-      comparisonData.labels.forEach(category => {
+      // Fill in maturity levels for each practice area
+      practiceAreas.forEach(area => {
         const value = assessment.results && 
-                     assessment.results.categories && 
-                     assessment.results.categories[category] ? 
-                     assessment.results.categories[category] : 0;
+                     assessment.results[area] && 
+                     typeof assessment.results[area].maturityLevel === 'number' ? 
+                     assessment.results[area].maturityLevel : 0;
         dataset.data.push(value);
       });
       
@@ -736,12 +746,34 @@ app.post('/api/assessments/compare', optionalAuth, async (req, res) => {
       success: true,
       data: {
         comparisonData,
-        assessments: assessments.map(a => ({
-          id: a._id,
-          date: a.createdAt || a.timestamp,
-          formattedDate: new Date(a.createdAt || a.timestamp).toLocaleString(),
-          metadata: a.metadata || {}
-        }))
+        assessments: assessments.map(a => {
+          // Format the date properly
+          const timestamp = a.createdAt || a.timestamp;
+          const date = timestamp ? new Date(timestamp) : null;
+          const formattedDate = date && !isNaN(date.getTime()) ? 
+            `${date.toLocaleDateString()} ${date.toLocaleTimeString()}` : 'Unknown Date';
+          
+          // Extract metadata with detailed logging
+          console.log('Processing assessment for comparison:', {
+            id: a._id,
+            timestamp,
+            metadata: a.metadata,
+            user: a.user
+          });
+          
+          return {
+            id: a._id,
+            date: timestamp,
+            formattedDate,
+            name: a.metadata?.title || a.metadata?.project || a.name || 
+              // Generate a descriptive title if none exists
+              `Assessment for ${a.user?.username || a.metadata?.username || a.username || 'Anonymous'} (${new Date(timestamp).toLocaleDateString()})`,
+            username: a.user?.username || a.metadata?.username || a.username || 'Anonymous',
+            metadata: a.metadata || {},
+            results: a.results || {}, // Include the full results object
+            responses: a.responses || {} // Include responses for potential recalculation
+          };
+        })
       }
     });
   } catch (error) {

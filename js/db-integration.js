@@ -198,7 +198,9 @@ window.assessmentHistory = {
      * @returns {Promise<Object>} - Promise resolving to the comparison data
      */
     compareAssessments: async function(assessmentIds) {
+        console.log('compareAssessments called with IDs:', assessmentIds);
         if (!assessmentIds || !Array.isArray(assessmentIds) || assessmentIds.length === 0) {
+            console.error('No assessment IDs provided for comparison');
             return {
                 success: false,
                 error: 'No assessment IDs provided for comparison'
@@ -212,10 +214,12 @@ window.assessmentHistory = {
             );
             
             const assessmentResults = await Promise.all(assessmentPromises);
+            console.log('Assessment results fetched:', assessmentResults);
             
             // Check if all assessments were fetched successfully
             const failedAssessments = assessmentResults.filter(result => !result.success);
             if (failedAssessments.length > 0) {
+                console.error('Failed to fetch assessments:', failedAssessments);
                 return {
                     success: false,
                     error: 'Failed to fetch one or more assessments for comparison',
@@ -225,9 +229,11 @@ window.assessmentHistory = {
             
             // Extract assessment data
             const assessments = assessmentResults.map(result => result.data);
+            console.log('Extracted assessment data:', assessments);
             
             // Generate comparison data
             const comparisonData = this.generateComparisonData(assessments);
+            console.log('Generated comparison data:', comparisonData);
             
             return {
                 success: true,
@@ -249,49 +255,151 @@ window.assessmentHistory = {
      * @returns {Object} - Structured comparison data
      * @private
      */
-    generateComparisonData: function(assessments) {
-        if (!assessments || assessments.length === 0) {
-            return { error: 'No assessments provided' };
+    generateComparisonData(assessments) {
+      console.log('Generating comparison data from assessments:', assessments);
+      
+      // Define practice areas to ensure consistency
+      const practiceAreas = [
+        'buildManagement',
+        'environments',
+        'releaseManagement',
+        'testing',
+        'dataManagement',
+        'configurationManagement',
+        'applicationArchitecture',
+        'observability'
+      ];
+      
+      // Process assessments to ensure required structure
+      const processedAssessments = assessments.map(assessment => {
+        // Deep clone to avoid mutating original data
+        const processedAssessment = JSON.parse(JSON.stringify(assessment));
+        
+        // Ensure results object exists
+        if (!processedAssessment.results) {
+          processedAssessment.results = {};
         }
         
-        // Extract practice areas from the first assessment
-        const practiceAreas = Object.keys(assessments[0].results.practiceAreas);
+        // Calculate overall maturity from practice areas if it doesn't exist
+        let overallMaturity = 0;
+        let validAreas = 0;
         
-        // Initialize comparison data structure
-        const comparisonData = {
-            assessments: assessments.map(assessment => ({
-                id: assessment._id,
-                name: assessment.name || 'Unnamed Assessment',
-                date: assessment.createdAt,
-                overallMaturity: assessment.results.overallMaturity
-            })),
-            practiceAreas: {},
-            chartData: {
-                labels: practiceAreas,
-                datasets: []
-            }
-        };
-        
-        // Generate random colors for each assessment
-        const colors = this.generateRandomColors(assessments.length);
-        
-        // Populate practice areas comparison data
+        // Process each practice area
         practiceAreas.forEach(area => {
-            comparisonData.practiceAreas[area] = {
-                name: area,
-                assessmentValues: assessments.map(assessment => ({
-                    id: assessment._id,
-                    maturityLevel: assessment.results.practiceAreas[area].maturityLevel,
-                    score: assessment.results.practiceAreas[area].score
-                }))
-            };
+          // Ensure practice area exists
+          if (!processedAssessment.results[area]) {
+            processedAssessment.results[area] = { maturityLevel: 0 };
+          } else if (processedAssessment.results[area].maturityLevel !== undefined) {
+            // Add to overall calculation if maturity level exists
+            overallMaturity += processedAssessment.results[area].maturityLevel;
+            validAreas++;
+          }
         });
         
+        // Get all maturity levels to calculate overall maturity
+        const maturityLevels = [];
+        practiceAreas.forEach(area => {
+          if (processedAssessment.results[area] && 
+              typeof processedAssessment.results[area].maturityLevel === 'number') {
+            maturityLevels.push(processedAssessment.results[area].maturityLevel);
+          }
+        });
+        
+        // Calculate overall maturity as the minimum of all practice area maturity levels
+        // This matches the logic in scoring.js: results.overall = { maturityLevel: Math.min(...maturityLevels) }
+        if (maturityLevels.length > 0) {
+          overallMaturity = Math.min(...maturityLevels);
+          console.log(`Calculated overall maturity (minimum of all areas): ${overallMaturity}`);
+        }
+        
+        // Set the overall maturity in the results object
+        if (!processedAssessment.results.overall) {
+          processedAssessment.results.overall = { maturityLevel: overallMaturity };
+        } else {
+          processedAssessment.results.overall.maturityLevel = overallMaturity;
+        }
+        console.log(`Final overall maturity: ${overallMaturity}`);
+        
+        
+        // Add overallMaturity property for easier access
+        processedAssessment.overallMaturity = processedAssessment.results.overall.maturityLevel;
+        
+        console.log(`Processed assessment ${processedAssessment._id || 'unknown'} with overall maturity:`, processedAssessment.overallMaturity);
+        
+        // Force the overallMaturity to be a number
+        if (typeof processedAssessment.overallMaturity !== 'number') {
+          processedAssessment.overallMaturity = parseInt(processedAssessment.overallMaturity) || 0;
+        }
+        
+        return processedAssessment;
+      });
+      
+      console.log('Processed assessments before creating comparison data:', JSON.stringify(processedAssessments));
+      
+      // Format practice area labels for display
+      const formattedLabels = practiceAreas.map(area => {
+        return area.replace(/([A-Z])/g, ' $1').trim();
+      });
+      
+      // Create comparison data structure with metadata and chart data
+      const comparisonData = {
+        assessments: processedAssessments.map(assessment => {
+          console.log(`Processing assessment ${assessment._id || assessment.id} for comparison data`);
+          console.log(`Results object exists: ${!!assessment.results}`);
+          if (assessment.results) {
+            console.log(`Results keys: ${Object.keys(assessment.results)}`);
+            console.log(`Overall maturity in results: ${assessment.results.overall?.maturityLevel}`);
+          }
+          console.log(`Direct overallMaturity property: ${assessment.overallMaturity}`);
+          
+          // Include the full results object in the comparison data
+          return {
+            id: assessment._id || assessment.id,
+            name: assessment.name || assessment.metadata?.title || 'Assessment',
+            date: assessment.timestamp || assessment.createdAt,
+            formattedDate: new Date(assessment.timestamp || assessment.createdAt).toLocaleString(),
+            overallMaturity: assessment.overallMaturity,
+            results: assessment.results, // Include the full results object
+            metadata: {
+              title: assessment.metadata?.title || assessment.name || 'Untitled',
+            },
+            user: {
+              username: assessment.user?.username || assessment.username || 'Anonymous'
+            }
+          };
+        }),
+        chartData: {
+          labels: formattedLabels,
+          datasets: []
+        }
+      };
+      
+      // Log the overall maturity values and results for debugging
+      comparisonData.assessments.forEach((assessment, index) => {
+        console.log(`Assessment ${index} in comparisonData:`);
+        console.log(`- ID: ${assessment.id}`);
+        console.log(`- Overall maturity: ${assessment.overallMaturity}`);
+        console.log(`- Has results object: ${!!assessment.results}`);
+        if (assessment.results) {
+          console.log(`- Results keys: ${Object.keys(assessment.results)}`);
+        }
+      });
+        
+        // Generate random colors for each assessment
+        const colors = processedAssessments.map(() => ({
+            r: Math.floor(Math.random() * 200),
+            g: Math.floor(Math.random() * 200),
+            b: Math.floor(Math.random() * 200)
+        }));
+        
         // Create chart datasets
-        assessments.forEach((assessment, index) => {
+        processedAssessments.forEach((assessment, index) => {
+            const date = new Date(assessment.timestamp || assessment.createdAt);
+            const formattedDate = date.toLocaleDateString();
+            
             comparisonData.chartData.datasets.push({
-                label: assessment.name || `Assessment ${index + 1}`,
-                data: practiceAreas.map(area => assessment.results.practiceAreas[area].maturityLevel),
+                label: `${assessment.name || assessment.username || `Assessment ${index + 1}`} (${formattedDate})`,
+                data: practiceAreas.map(area => assessment.results[area]?.maturityLevel || 0),
                 backgroundColor: `rgba(${colors[index].r}, ${colors[index].g}, ${colors[index].b}, 0.2)`,
                 borderColor: `rgba(${colors[index].r}, ${colors[index].g}, ${colors[index].b}, 1)`,
                 borderWidth: 2,
@@ -299,7 +407,15 @@ window.assessmentHistory = {
             });
         });
         
-        return comparisonData;
+        // Add debug logs to see what we're returning
+        console.log('Final chart data:', JSON.stringify(comparisonData.chartData, null, 2));
+        console.log('Final assessments data:', JSON.stringify(comparisonData.assessments, null, 2));
+        
+        // Return both the comparison data and the assessments
+        return {
+            comparisonData: comparisonData.chartData,
+            assessments: comparisonData.assessments
+        };
     },
     
     /**
@@ -342,18 +458,23 @@ window.assessmentHistory = {
 
 // Cache for feature and connection status
 window.dbIntegration.status = {
-    enabled: null,
-    connected: null,
-    checking: false
+    enabled: true,  // Default to true until proven otherwise
+    connected: true,  // Default to true until proven otherwise
+    checking: false,
+    lastChecked: 0
 };
 
 /**
  * Check if MongoDB integration is enabled and connected
  * @returns {Promise<Object>} - Promise resolving to status object with enabled and connected properties
  */
-window.dbIntegration.checkStatus = async function() {
-    // Return cached status if we're already checking
-    if (window.dbIntegration.status.checking) {
+window.dbIntegration.checkStatus = async function(forceCheck = false) {
+    const now = Date.now();
+    const cacheTimeout = 30000; // 30 seconds cache timeout
+    
+    // Return cached status if we're already checking or if cache is still valid
+    if (window.dbIntegration.status.checking || 
+        (!forceCheck && (now - window.dbIntegration.status.lastChecked) < cacheTimeout)) {
         return {
             enabled: window.dbIntegration.status.enabled,
             connected: window.dbIntegration.status.connected
@@ -362,21 +483,32 @@ window.dbIntegration.checkStatus = async function() {
     
     try {
         window.dbIntegration.status.checking = true;
-        const response = await fetch('/api/health');
+        
+        // Add cache buster to prevent browser caching
+        const cacheBuster = `?_=${Date.now()}`;
+        const response = await fetch(`/api/health${cacheBuster}`);
         
         if (!response.ok) {
-            console.warn('Health check failed, assuming MongoDB is disabled');
-            window.dbIntegration.status.enabled = false;
-            window.dbIntegration.status.connected = false;
-            return { enabled: false, connected: false };
+            console.warn('Health check failed, but will continue with current status');
+            // Don't change the status if the health check fails - keep using what we have
+            return { 
+                enabled: window.dbIntegration.status.enabled, 
+                connected: window.dbIntegration.status.connected 
+            };
         }
         
         const data = await response.json();
         
-        window.dbIntegration.status.enabled = data.features && data.features.mongodb === true;
-        window.dbIntegration.status.connected = data.connections && data.connections.mongodb === true;
-        
-        console.log(`MongoDB integration is ${window.dbIntegration.status.enabled ? 'enabled' : 'disabled'} and ${window.dbIntegration.status.connected ? 'connected' : 'not connected'}`);
+        // Only update if we get valid data
+        if (data && data.features && typeof data.features.mongodb === 'boolean') {
+            window.dbIntegration.status.enabled = data.features.mongodb;
+            window.dbIntegration.status.connected = data.connections && data.connections.mongodb === true;
+            window.dbIntegration.status.lastChecked = now;
+            
+            console.log(`MongoDB integration is ${window.dbIntegration.status.enabled ? 'enabled' : 'disabled'} and ${window.dbIntegration.status.connected ? 'connected' : 'not connected'}`);
+        } else {
+            console.warn('Invalid health check response, keeping current status');
+        }
         
         return {
             enabled: window.dbIntegration.status.enabled,
@@ -384,9 +516,11 @@ window.dbIntegration.checkStatus = async function() {
         };
     } catch (error) {
         console.error('Failed to check MongoDB status:', error);
-        window.dbIntegration.status.enabled = false;
-        window.dbIntegration.status.connected = false;
-        return { enabled: false, connected: false };
+        // Don't change status on error, just return current status
+        return { 
+            enabled: window.dbIntegration.status.enabled, 
+            connected: window.dbIntegration.status.connected 
+        };
     } finally {
         window.dbIntegration.status.checking = false;
     }
@@ -537,18 +671,46 @@ window.dbIntegration.getAssessmentById = async function(id) {
             };
         }
         
-        const responseData = await response.json();
+        const data = await response.json();
+        console.log(`Assessment ${id} data:`, JSON.stringify(data, null, 2));
+        
+        // Log the structure of the results object
+        if (data && data.results) {
+            console.log(`Assessment ${id} results structure:`, Object.keys(data.results));
+            
+            // Check for practice areas
+            const practiceAreas = [
+                'buildManagement', 'environments', 'releaseManagement', 'testing',
+                'dataManagement', 'configurationManagement', 'applicationArchitecture', 'observability'
+            ];
+            
+            practiceAreas.forEach(area => {
+                console.log(`Assessment ${id} has ${area}:`, !!data.results[area]);
+                if (data.results[area]) {
+                    console.log(`${area} maturityLevel:`, data.results[area].maturityLevel);
+                }
+            });
+            
+            // Check for overall maturity
+            if (data.results.overall) {
+                console.log(`Assessment ${id} overall maturity:`, data.results.overall.maturityLevel);
+            } else {
+                console.log(`Assessment ${id} has no overall maturity property`);
+            }
+        } else {
+            console.log(`Assessment ${id} has no results property`);
+        }
         
         // Extract the actual assessment data
         let assessmentData;
-        if (responseData.data) {
+        if (data.data) {
             // If the response has a data property, use that
-            assessmentData = responseData.data;
-        } else if (responseData._id) {
+            assessmentData = data.data;
+        } else if (data._id) {
             // If the response itself is the assessment, use that
-            assessmentData = responseData;
+            assessmentData = data;
         } else {
-            console.error('Invalid assessment data structure:', responseData);
+            console.error('Invalid assessment data structure:', data);
             return {
                 success: false,
                 error: 'Invalid assessment data structure'

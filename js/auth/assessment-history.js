@@ -213,24 +213,87 @@ window.assessmentHistoryUI = (function() {
    * Load assessments from the server
    * @param {string} searchTerm - Optional search term
    */
+  /**
+   * Force check MongoDB status
+   * @returns {Promise<boolean>} True if MongoDB is enabled and connected
+   */
+  async function checkMongoDBStatus() {
+    try {
+      // Force a fresh check of MongoDB status
+      const status = await window.dbIntegration.checkStatus(true);
+      
+      if (!status.enabled) {
+        console.error('MongoDB integration is disabled. Please check server configuration.');
+        return false;
+      }
+      
+      if (!status.connected) {
+        console.error('MongoDB is not connected. Please check server logs.');
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking MongoDB status:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load assessments from the server
+   * @param {string} [searchTerm] - Optional search term
+   */
   async function loadAssessments(searchTerm = '') {
-    // Check if user is authenticated
-    if (!window.authService || !window.authService.isAuthenticated()) {
-      showAuthRequiredMessage();
+    try {
+      // Check if user is authenticated
+      if (!window.authService || !window.authService.isAuthenticated()) {
+        showAuthRequiredMessage();
+        return;
+      }
+    
+    // Show loading state
+    document.getElementById('assessment-history-table').innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </td>
+      </tr>
+    `;
+    
+    // Disable compare button while loading
+    document.getElementById('compare-selected-btn').disabled = true;
+    
+    // Reset selected assessments
+    selectedAssessments = [];
+    
+    // Check MongoDB status before proceeding
+    const mongoDBReady = await checkMongoDBStatus();
+    if (!mongoDBReady) {
+      document.getElementById('assessment-history-table').innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            MongoDB connection issue. Please check server configuration.
+          </td>
+        </tr>
+      `;
       return;
     }
     
-    // Show loading message
-    const tableBody = document.getElementById('assessment-history-table');
-    tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading assessments...</td></tr>';
-    
-    // Get assessments from server
-    const result = await window.dbIntegration.getAllAssessments(currentPage, pageSize, true);
+    // Get assessments from the server
+    const result = await window.dbIntegration.getAllAssessments(currentPage, pageSize, true, searchTerm);
     
     if (!result.success) {
-      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">
-        Failed to load assessments: ${result.error || 'Unknown error'}
-      </td></tr>`;
+      document.getElementById('assessment-history-table').innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Failed to load assessments: ${result.error || 'Unknown error'}
+          </td>
+        </tr>
+      `;
       return;
     }
     
@@ -247,6 +310,17 @@ window.assessmentHistoryUI = (function() {
     
     // Render pagination
     renderPagination();
+  } catch (error) {
+    console.error('Error loading assessments:', error);
+    document.getElementById('assessment-history-table').innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-danger">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Failed to load assessments: ${error.message || 'Unknown error'}
+        </td>
+      </tr>
+    `;
+  }
   }
   
   /**
@@ -618,7 +692,7 @@ window.assessmentHistoryUI = (function() {
       modal.show();
       
       // Get authentication token
-      const token = window.authService.getToken();
+      const token = window.authService ? window.authService.getToken() : null;
       
       // Prepare request payload
       const payload = {
@@ -670,14 +744,51 @@ window.assessmentHistoryUI = (function() {
    * @param {Object} data - Server response data containing comparison information
    */
   function renderComparisonFromServerData(data) {
-    const { comparisonData, assessments } = data;
+    console.log('renderComparisonFromServerData called with data:', JSON.stringify(data));
+    
+    // Extract the data structure correctly
+    // The server response has a different structure than what our rendering functions expect
+    let comparisonData, assessmentsData;
+    
+    // Server response structure from /api/assessments/compare endpoint
+    comparisonData = data.comparisonData;
+    assessmentsData = data.assessments;
+    
+    console.log('Processing server data for comparison:', {
+      comparisonData: comparisonData,
+      assessmentsData: assessmentsData
+    });
+    
+    // Ensure assessmentsData has all required fields for CSV export
+    if (assessmentsData && assessmentsData.length) {
+      assessmentsData.forEach((assessment, index) => {
+        console.log(`Assessment ${index} data:`, assessment);
+      });
+    } else {
+      console.warn('No assessment data available for comparison');
+      assessmentsData = [];
+    }
+    
+    console.log('Extracted comparisonData:', JSON.stringify(comparisonData));
+    console.log('Extracted assessments:', JSON.stringify(assessmentsData));
+    
+    // Check if assessments have the full results object
+    assessmentsData.forEach((assessment, index) => {
+      console.log(`Assessment ${index} (${assessment.id}) - Has results object:`, !!assessment.results);
+      if (assessment.results) {
+        console.log(`Assessment ${index} practice areas:`, Object.keys(assessment.results));
+      } else {
+        console.log(`Assessment ${index} is missing results object. Full assessment:`, JSON.stringify(assessment));
+      }
+    });
     
     // Clear previous content
     const comparisonContent = document.getElementById('comparison-content');
     comparisonContent.innerHTML = '';
     
-    // Create chart container
+    // Create chart container with fixed height
     const chartContainer = document.createElement('div');
+    chartContainer.id = 'comparison-chart-container';
     chartContainer.className = 'mb-4';
     chartContainer.innerHTML = '<canvas id="comparison-chart"></canvas>';
     comparisonContent.appendChild(chartContainer);
@@ -691,30 +802,53 @@ window.assessmentHistoryUI = (function() {
     const exportButton = document.createElement('button');
     exportButton.className = 'btn btn-outline-primary mt-3';
     exportButton.innerHTML = '<i class="bi bi-download"></i> Export as CSV';
-    exportButton.addEventListener('click', () => exportComparison(comparisonData, assessments));
+    exportButton.addEventListener('click', () => exportComparison(comparisonData, assessmentsData));
     comparisonContent.appendChild(exportButton);
+    
+    // Destroy existing chart if it exists
+    if (window.comparisonChart instanceof Chart) {
+      window.comparisonChart.destroy();
+    }
     
     // Render chart
     const ctx = document.getElementById('comparison-chart').getContext('2d');
-    new Chart(ctx, {
+    window.comparisonChart = new Chart(ctx, {
       type: 'radar',
       data: comparisonData,
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: 20
+        },
         scales: {
           r: {
             beginAtZero: true,
             min: 0,
             max: 5,
             ticks: {
-              stepSize: 1
+              stepSize: 1,
+              font: {
+                size: 12
+              }
+            },
+            pointLabels: {
+              font: {
+                size: 14
+              }
             }
           }
         },
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              boxWidth: 15,
+              font: {
+                size: 12
+              }
+            }
           },
           tooltip: {
             callbacks: {
@@ -730,7 +864,7 @@ window.assessmentHistoryUI = (function() {
     });
     
     // Render comparison table
-    renderComparisonTable(comparisonData, assessments);
+    renderComparisonTable(comparisonData, assessmentsData);
   }
   
   /**
@@ -793,6 +927,10 @@ window.assessmentHistoryUI = (function() {
    * @param {Array} assessments - Assessment metadata
    */
   function renderComparisonTable(comparisonData, assessments) {
+    console.log('renderComparisonTable called with:');
+    console.log('comparisonData:', comparisonData);
+    console.log('assessments:', assessments);
+    
     // Create table element
     const tableContainer = document.querySelector('#comparison-content .table-responsive');
     const table = document.createElement('table');
@@ -848,11 +986,43 @@ window.assessmentHistoryUI = (function() {
     overallRow.className = 'table-active';
     overallRow.innerHTML = '<td><strong>Overall Maturity</strong></td>';
     
-    // Calculate and add overall maturity for each dataset
-    datasets.forEach(dataset => {
-      const values = dataset.data;
-      const overallMaturity = values.length > 0 ? 
-        values.reduce((sum, val) => sum + val, 0) / values.length : 0;
+    // Recalculate overall maturity for each assessment using the same logic as in scoring.js
+    console.log('Processing overall maturity for assessments:', assessments);
+    assessments.forEach((assessment, index) => {
+      // Get the assessment data
+      console.log(`Assessment ${index}:`, JSON.stringify(assessment));
+      
+      // Make sure we have a valid overall maturity value
+      let overallMaturity = 0;
+      
+      // Use the same logic as in scoring.js to calculate the overall maturity
+      if (assessment.results) {
+        const practiceAreas = [
+          'buildManagement', 'environments', 'releaseManagement', 'testing',
+          'dataManagement', 'configurationManagement', 'applicationArchitecture', 'observability'
+        ];
+        
+        // Extract maturity levels from each practice area
+        const maturityLevels = [];
+        practiceAreas.forEach(area => {
+          if (assessment.results[area] && typeof assessment.results[area].maturityLevel === 'number') {
+            maturityLevels.push(assessment.results[area].maturityLevel);
+          }
+        });
+        
+        // Calculate overall maturity as the minimum of all practice area maturity levels
+        // This matches the logic in scoring.js: results.overall = { maturityLevel: Math.min(...maturityLevels) }
+        if (maturityLevels.length > 0) {
+          overallMaturity = Math.min(...maturityLevels);
+          console.log(`Calculated overall maturity (minimum of all areas): ${overallMaturity}`);
+        } else {
+          console.log('No valid maturity levels found in assessment results');
+        }
+      } else {
+        console.log('No results object found in assessment');
+      }
+      
+      console.log(`Final overall maturity for assessment ${index}:`, overallMaturity);
       
       overallRow.innerHTML += `
         <td>
@@ -870,10 +1040,7 @@ window.assessmentHistoryUI = (function() {
   /**
    * Export comparison data as CSV
    */
-  function exportComparison() {
-    // TODO: Implement export functionality
-    alert('Export functionality not yet implemented');
-  }
+  // Legacy exportComparison function - removed to avoid duplication
   
   /**
    * Show message that authentication is required
@@ -953,6 +1120,7 @@ window.assessmentHistoryUI = (function() {
    * @param {Array} assessments - Assessment metadata
    */
   function exportComparison(comparisonData, assessments) {
+    console.log('Exporting comparison data to CSV:', comparisonData, assessments);
     const { labels, datasets } = comparisonData;
     
     // Create CSV header row
@@ -963,26 +1131,91 @@ window.assessmentHistoryUI = (function() {
     // Add data rows for each practice area
     labels.forEach((area, areaIndex) => {
       let row = `"${area}",`;
-      row += datasets.map(dataset => dataset.data[areaIndex].toFixed(2)).join(',');
+      row += datasets.map(dataset => {
+        const value = dataset.data[areaIndex] || 0;
+        return value.toFixed(2);
+      }).join(',');
       csvContent += row + '\n';
     });
     
-    // Add overall maturity row
-    let overallRow = '"Overall Maturity",'; 
-    overallRow += datasets.map(dataset => {
-      const values = dataset.data;
-      const overallMaturity = values.length > 0 ? 
-        values.reduce((sum, val) => sum + val, 0) / values.length : 0;
+    // Add overall maturity row using assessment data directly
+    let overallRow = '"Overall Maturity",';
+    overallRow += assessments.map((assessment) => {
+      // Get overall maturity from assessment or calculate it
+      let overallMaturity = 0;
+      
+      console.log('CSV export - assessment data:', JSON.stringify(assessment));
+      
+      // Use the same logic as in scoring.js to calculate the overall maturity
+      if (assessment.results) {
+        const practiceAreas = [
+          'buildManagement', 'environments', 'releaseManagement', 'testing',
+          'dataManagement', 'configurationManagement', 'applicationArchitecture', 'observability'
+        ];
+        
+        // Extract maturity levels from each practice area
+        const maturityLevels = [];
+        practiceAreas.forEach(area => {
+          if (assessment.results[area] && typeof assessment.results[area].maturityLevel === 'number') {
+            maturityLevels.push(assessment.results[area].maturityLevel);
+          }
+        });
+        
+        // Calculate overall maturity as the minimum of all practice area maturity levels
+        // This matches the logic in scoring.js: results.overall = { maturityLevel: Math.min(...maturityLevels) }
+        if (maturityLevels.length > 0) {
+          overallMaturity = Math.min(...maturityLevels);
+          console.log('CSV export - calculated overall maturity (minimum of all areas):', overallMaturity);
+        } else {
+          console.log('CSV export - no valid maturity levels found in assessment results');
+        }
+      } else {
+        console.log('CSV export - no results object found in assessment');
+      }
+      
+      console.log('CSV export - final overall maturity:', overallMaturity);
       return overallMaturity.toFixed(2);
     }).join(',');
-    csvContent += overallRow + '\n';
+    csvContent += overallRow + '\n\n';
     
     // Add assessment metadata
     csvContent += '\n"Assessment Details:"\n';
+    
+    // Log the full assessments data to debug
+    console.log('CSV export - full assessments data:', JSON.stringify(assessments));
+    
     assessments.forEach((assessment, index) => {
       const dataset = datasets[index];
-      const date = new Date(assessment.timestamp);
-      csvContent += `"${dataset.label}","${date.toLocaleDateString()} ${date.toLocaleTimeString()}","${assessment.metadata?.title || 'Untitled'}","${assessment.user?.username || 'Anonymous'}"\n`;
+      let dateStr = 'Unknown Date';
+      
+      // Handle date formatting safely
+      try {
+        // Use the date directly from the assessment object
+        const timestamp = assessment.date || assessment.timestamp || assessment.createdAt;
+        if (timestamp) {
+          const date = new Date(timestamp);
+          if (!isNaN(date.getTime())) { // Check if date is valid
+            dateStr = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+            console.log(`CSV export - formatted date for assessment ${index}:`, dateStr);
+          }
+        }
+      } catch (e) {
+        console.error('Error formatting date:', e);
+      }
+      
+      // Use the name and username directly from the assessment object
+      // These fields were explicitly added in the server response
+      const title = assessment.name || 'Untitled';
+      const username = assessment.username || 'Anonymous';
+      
+      console.log(`CSV export - assessment ${index} details:`, {
+        label: dataset.label,
+        date: dateStr,
+        title,
+        username
+      });
+      
+      csvContent += `"${dataset.label}","${dateStr}","${title}","${username}"\n`;
     });
     
     // Create download link
@@ -994,7 +1227,12 @@ window.assessmentHistoryUI = (function() {
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    
+    // Clean up
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    }, 100);
   }
   
   /**

@@ -6,7 +6,8 @@
  * Feature can be toggled using ENABLE_MONGODB environment variable.
  */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 module.exports = {
   // Feature flag to enable/disable MongoDB integration
