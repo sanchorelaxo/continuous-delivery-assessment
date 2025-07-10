@@ -806,24 +806,21 @@
             const maturityDescription = window.getMaturityDescription(overallLevel);
             let recommendationText = '';
             
-            // Use the same logic as getMaturityDescription
+            // Correspondance correcte entre niveaux de maturité et recommandations
             switch (overallLevel) {
                 case -1:
                     recommendationText = uiText.recommendationInitial;
                     break;
                 case 0:
-                    recommendationText = uiText.recommendationInitial;
-                    break;
-                case 1:
                     recommendationText = uiText.recommendationManaged;
                     break;
-                case 2:
+                case 1:
                     recommendationText = uiText.recommendationDefined;
                     break;
-                case 3:
+                case 2:
                     recommendationText = uiText.recommendationMeasured;
                     break;
-                case 4:
+                case 3:
                     recommendationText = uiText.recommendationOptimizing;
                     break;
                 default:
