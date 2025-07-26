@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Question Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .question-editor-container { max-width: 900px; margin: 2rem auto; }
+        .answer-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .answer-row input[type="text"] { flex: 1 1 0; }
+        .answer-row .remove-btn { align-self: center; }
+        .match-table input[type="text"] { width: 100%; }
+        .match-table th, .match-table td { padding: 0.5rem; }
+        .match-table .remove-btn { color: #dc3545; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container question-editor-container">
+    <h1 class="mb-4"><span data-i18n="editorTitle">Question Editor</span> <span class="badge bg-secondary" data-i18n="adminBadge">Admin</span></h1>
+    
+    <!-- Language Toggle -->
+    <div class="d-flex justify-content-end mb-4">
+        <div class="lang-toggle">
+            <button class="btn btn-outline-primary active" onclick="setLanguage('en_CA')" id="lang-en">EN</button>
+            <button class="btn btn-outline-primary ms-2" onclick="setLanguage('fr_CA')" id="lang-fr">FR</button>
+        </div>
+    </div>
+    <form id="questionForm" autocomplete="off">
+        <div class="mb-3">
+            <label for="section" class="form-label" data-i18n="section">Section</label>
+            <select class="form-select" id="section" required>
+                <option value="" data-i18n="selectSection">Select a practice area</option>
+                <option value="buildManagement" data-i18n="buildManagement">Build Management</option>
+                <option value="environments" data-i18n="environments">Environments</option>
+                <option value="releaseManagement" data-i18n="releaseManagement">Release Management</option>
+                <option value="testing" data-i18n="testing">Testing</option>
+                <option value="dataManagement" data-i18n="dataManagement">Data Management</option>
+                <option value="configurationManagement" data-i18n="configurationManagement">Configuration Management</option>
+                <option value="applicationArchitecture" data-i18n="applicationArchitecture">Application Architecture</option>
+                <option value="observability" data-i18n="observability">Observability</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="type" class="form-label" data-i18n="questionType">Question Type</label>
+            <select class="form-select" id="type" required>
+                <option value="MultipleChoice" data-i18n="multipleChoice">Multiple Choice</option>
+                <option value="Checkboxes" data-i18n="checkboxes">Checkboxes</option>
+                <option value="MatchAnswers" data-i18n="matchAnswers">Match Answers</option>
+                <option value="TrueFalse" data-i18n="trueFalse">True/False</option>
+            </select>
+        </div>
+        <div class="language-content" id="en-content">
+            <div class="mb-3">
+                <label for="text_en" class="form-label" data-i18n="questionTextEn">Question Text (English)</label>
+                <textarea class="form-control" id="text_en" name="text_en" rows="2" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="description_en" class="form-label" data-i18n="descriptionEn">Description (English, optional)</label>
+                <textarea class="form-control" id="description_en" name="description_en" rows="2"></textarea>
+            </div>
+        </div>
+        
+        <div class="language-content" id="fr-content" style="display: none;">
+            <div class="mb-3">
+                <label for="text_fr" class="form-label" data-i18n="questionTextFr">Question Text (French)</label>
+                <textarea class="form-control" id="text_fr" name="text_fr" rows="2" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="description_fr" class="form-label" data-i18n="descriptionFr">Description (French, optional)</label>
+                <textarea class="form-control" id="description_fr" name="description_fr" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="weight" class="form-label" data-i18n="questionWeight">Question Weight</label>
+            <select class="form-select" id="weight" required>
+                <option value="1" data-i18n="standardWeight">Standard (Normal weight)</option>
+                <option value="2" data-i18n="importantWeight">Important (Double weight)</option>
+                <option value="3" data-i18n="criticalWeight">Critical (Triple weight)</option>
+            </select>
+        </div>
+        <div id="dynamic-fields"></div>
+        <button type="submit" class="btn btn-success" data-i18n="saveQuestion">Save Question</button>
+        <button type="button" class="btn btn-secondary ms-2" id="resetBtn" data-i18n="reset">Reset</button>
+    </form>
+    <hr class="my-4">
+    <h3 data-i18n="existingQuestions">Existing Questions</h3>
+    <div id="questionsList"></div>
+</div>
+<script>
+// Translation object for the question editor
+const editorTranslations = {
+    en_CA: {
+        // Page elements
+        editorTitle: "Question Editor",
+        adminBadge: "Admin",
+        saveQuestion: "Save Question",
+        reset: "Reset",
+        existingQuestions: "Existing Questions",
+        noQuestions: "No questions yet.",
+        edit: "Edit",
+        delete: "Delete",
+        deleteConfirm: "Delete this question?",
+        
+        // Form labels
+        section: "Section",
+        selectSection: "Select a practice area",
+        questionType: "Question Type",
+        questionTextEn: "Question Text (English)",
+        descriptionEn: "Description (English, optional)",
+        questionTextFr: "Question Text (French)",
+        descriptionFr: "Description (French, optional)",
+        questionWeight: "Question Weight",
+        
+        // Section options
+        buildManagement: "Build Management",
+        environments: "Environments",
+        releaseManagement: "Release Management",
+        testing: "Testing",
+        dataManagement: "Data Management",
+        configurationManagement: "Configuration Management",
+        applicationArchitecture: "Application Architecture",
+        observability: "Observability",
+        
+        // Question types
+        multipleChoice: "Multiple Choice",
+        checkboxes: "Checkboxes",
+        matchAnswers: "Match Answers",
+        trueFalse: "True/False",
+        
+        // Weight options
+        standardWeight: "Standard (Normal weight)",
+        importantWeight: "Important (Double weight)",
+        criticalWeight: "Critical (Triple weight)",
+        
+        // Card labels
+        sectionLabel: "Section",
+        typeLabel: "Type",
+        weightLabel: "Weight",
+        textLabel: "Text",
+        bilingual: "Bilingual",
+        enOnly: "EN only",
+        frOnly: "FR only",
+        
+        // Dynamic field labels and placeholders
+        options: "Options",
+        option: "Option",
+        addOption: "Add Option",
+        matchPairs: "Match Pairs",
+        leftItem: "Left item",
+        rightItem: "Right item",
+        addPair: "Add Pair",
+        correctAnswer: "Correct Answer",
+        true: "True",
+        false: "False",
+        answer: "Answer",
+        newAnswer: "New Answer",
+        term: "Term",
+        match: "Match",
+        columnA: "Column A",
+        columnB: "Column B",
+    },
+    fr_CA: {
+        // Dynamic field labels and placeholders
+        options: "Options",
+        option: "Option",
+        addOption: "Ajouter une Option",
+        matchPairs: "Paires Correspondantes",
+        leftItem: "Élément gauche",
+        rightItem: "Élément droit",
+        addPair: "Ajouter une Paire",
+        correctAnswer: "Réponse Correcte",
+        true: "Vrai",
+        false: "Faux",
+        answer: "Réponse",
+        newAnswer: "Nouvelle Réponse",
+        term: "Terme",
+        match: "Correspondance",
+        columnA: "Colonne A",
+        columnB: "Colonne B",
+        
+        // Page elements
+        editorTitle: "Éditeur de Questions",
+        adminBadge: "Admin",
+        saveQuestion: "Enregistrer la Question",
+        reset: "Réinitialiser",
+        existingQuestions: "Questions Existantes",
+        noQuestions: "Pas encore de questions.",
+        edit: "Modifier",
+        delete: "Supprimer",
+        deleteConfirm: "Supprimer cette question?",
+        
+        // Form labels
+        section: "Section",
+        selectSection: "Sélectionnez un domaine de pratique",
+        questionType: "Type de Question",
+        questionTextEn: "Texte de la Question (Anglais)",
+        descriptionEn: "Description (Anglais, facultatif)",
+        questionTextFr: "Texte de la Question (Français)",
+        descriptionFr: "Description (Français, facultatif)",
+        questionWeight: "Poids de la Question",
+        
+        // Section options
+        buildManagement: "Gestion des Builds",
+        environments: "Environnements",
+        releaseManagement: "Gestion des Versions",
+        testing: "Tests",
+        dataManagement: "Gestion des Données",
+        configurationManagement: "Gestion de la Configuration",
+        applicationArchitecture: "Architecture d'Application",
+        observability: "Observabilité",
+        
+        // Question types
+        multipleChoice: "Choix Multiple",
+        checkboxes: "Cases à Cocher",
+        matchAnswers: "Correspondance de Réponses",
+        trueFalse: "Vrai/Faux",
+        
+        // Weight options
+        standardWeight: "Standard (Poids normal)",
+        importantWeight: "Important (Poids double)",
+        criticalWeight: "Critique (Poids triple)",
+        
+        // Card labels
+        sectionLabel: "Section",
+        typeLabel: "Type",
+        weightLabel: "Poids",
+        textLabel: "Texte",
+        bilingual: "Bilingue",
+        enOnly: "EN seulement",
+        frOnly: "FR seulement"
+    }
+};
+
+const typeSelect = document.getElementById('type');
+const dynamicFields = document.getElementById('dynamic-fields');
+const form = document.getElementById('questionForm');
+const resetBtn = document.getElementById('resetBtn');
+const langEn = document.getElementById('lang-en');
+const langFr = document.getElementById('lang-fr');
+const enContent = document.getElementById('en-content');
+const frContent = document.getElementById('fr-content');
+
+let editingIndex = null;
+let questions = [];
+let currentLanguage = 'en_CA'; // Default language
+
+function renderDynamicFields(type, data = {}) {
+    dynamicFields.innerHTML = '';
+    
+    if (type === 'MultipleChoice' || type === 'Checkboxes') {
+        // Options
+        const label = document.createElement('label');
+        label.textContent = editorTranslations[currentLanguage].options || 'Answer Options';
+        label.className = 'form-label';
+        label.setAttribute('data-i18n', 'options');
+        dynamicFields.appendChild(label);
+        
+        const optionsDiv = document.createElement('div');
+        optionsDiv.id = 'optionsDiv';
+        dynamicFields.appendChild(optionsDiv);
+        
+        let options = data.options || ['',''];
+        let correct = data.correctAnswer || (type==='Checkboxes'?[]:'');
+        
+        function renderOptions(focusIndex = null) {
+            optionsDiv.innerHTML = '';
+            options.forEach((val, idx) => {
+                const row = document.createElement('div');
+                row.className = 'answer-row d-flex align-items-center';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'form-control';
+                input.value = val;
+                input.placeholder = idx === options.length-1 ? 
+                    editorTranslations[currentLanguage].newAnswer || 'New Answer' : 
+                    editorTranslations[currentLanguage].answer || 'Answer';
+                input.dataset.index = idx;
+                input.oninput = e => {
+                    options[idx] = e.target.value;
+                    if (idx === options.length-1 && e.target.value) {
+                        options.push('');
+                        renderOptions(idx);
+                    }
+                };
+                row.appendChild(input);
+                
+                // Correct answer checkbox with label
+                const correctDiv = document.createElement('div');
+                correctDiv.className = 'd-flex align-items-center ms-2';
+                
+                if (type === 'Checkboxes') {
+                    const label = document.createElement('span');
+                    label.textContent = editorTranslations[currentLanguage].correctAnswer || 'correct answer';
+                    label.style.fontSize = '0.95em';
+                    label.style.marginRight = '0.25em';
+                    correctDiv.appendChild(label);
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'form-check-input';
+                    checkbox.checked = Array.isArray(correct) && correct.includes(idx);
+                    checkbox.onclick = () => {
+                        if (!Array.isArray(correct)) correct = [];
+                        if (checkbox.checked) correct.push(idx);
+                        else correct = correct.filter(i => i !== idx);
+                    };
+                    correctDiv.appendChild(checkbox);
+                } else {
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'correctOption';
+                    radio.className = 'form-check-input';
+                    radio.checked = correct === idx;
+                    radio.onclick = () => { correct = idx; };
+                    correctDiv.appendChild(radio);
+                }
+                row.appendChild(correctDiv);
+                
+                // Remove option button (red ×)
+                if (options.length > 2 && idx !== options.length-1) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-link text-danger fs-4 px-2 remove-btn';
+                    btn.innerHTML = '&times;';
+                    btn.onclick = () => { options.splice(idx,1); renderOptions(); };
+                    row.appendChild(btn);
+                }
+                optionsDiv.appendChild(row);
+            });
+            
+            // Restore focus if needed
+            if (focusIndex !== null) {
+                setTimeout(() => {
+                    const inputToFocus = optionsDiv.querySelector(`input[data-index="${focusIndex}"]`);
+                    if (inputToFocus) {
+                        inputToFocus.focus();
+                        // Place cursor at the end of the text
+                        const val = inputToFocus.value;
+                        inputToFocus.value = '';
+                        inputToFocus.value = val;
+                    }
+                }, 0);
+            }
+        }
+        renderOptions();
+        dynamicFields.appendChild(document.createElement('hr'));
+    } else if (type === 'MatchAnswers') {
+        // Match Answers
+        const label = document.createElement('label');
+        label.textContent = editorTranslations[currentLanguage].matchPairs || 'Matching Pairs';
+        label.className = 'form-label';
+        label.setAttribute('data-i18n', 'matchPairs');
+        dynamicFields.appendChild(label);
+        
+        const table = document.createElement('table');
+        table.className = 'table table-bordered match-table';
+        
+        const thead = document.createElement('thead');
+        thead.innerHTML = `<tr>
+            <th>${editorTranslations[currentLanguage].columnA || 'Column A'}</th>
+            <th>${editorTranslations[currentLanguage].columnB || 'Column B'}</th>
+            <th></th>
+        </tr>`;
+        table.appendChild(thead);
+        
+        const tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        
+        let pairs = data.pairs || [{left:'',right:''}];
+        
+        function renderPairs(focusIndex = null, focusSide = null) {
+            tbody.innerHTML = '';
+            pairs.forEach((pair, idx) => {
+                const tr = document.createElement('tr');
+                
+                const tdA = document.createElement('td');
+                const inputA = document.createElement('input');
+                inputA.type = 'text';
+                inputA.className = 'form-control';
+                inputA.value = pair.left;
+                inputA.placeholder = editorTranslations[currentLanguage].term || 'Term';
+                inputA.dataset.index = idx;
+                inputA.dataset.side = 'left';
+                inputA.oninput = e => {
+                    pairs[idx].left = e.target.value;
+                    if (idx === pairs.length-1 && (e.target.value || pairs[idx].right)) {
+                        pairs.push({left:'',right:''});
+                        renderPairs(idx, 'left');
+                    }
+                };
+                tdA.appendChild(inputA);
+                tr.appendChild(tdA);
+                
+                const tdB = document.createElement('td');
+                const inputB = document.createElement('input');
+                inputB.type = 'text';
+                inputB.className = 'form-control';
+                inputB.value = pair.right;
+                inputB.placeholder = editorTranslations[currentLanguage].match || 'Match';
+                inputB.dataset.index = idx;
+                inputB.dataset.side = 'right';
+                inputB.oninput = e => {
+                    pairs[idx].right = e.target.value;
+                    if (idx === pairs.length-1 && (e.target.value || pairs[idx].left)) {
+                        pairs.push({left:'',right:''});
+                        renderPairs(idx, 'right');
+                    }
+                };
+                tdB.appendChild(inputB);
+                tr.appendChild(tdB);
+                
+                // Remove button
+                const tdRemove = document.createElement('td');
+                if (pairs.length > 1 && (pair.left || pair.right)) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-sm btn-outline-danger remove-btn';
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                    btn.onclick = () => { pairs.splice(idx,1); renderPairs(); };
+                    tdRemove.appendChild(btn);
+                }
+                tr.appendChild(tdRemove);
+                tbody.appendChild(tr);
+            });
+            
+            // Restore focus if needed
+            if (focusIndex !== null && focusSide !== null) {
+                setTimeout(() => {
+                    const inputToFocus = tbody.querySelector(`input[data-index="${focusIndex}"][data-side="${focusSide}"]`);
+                    if (inputToFocus) {
+                        inputToFocus.focus();
+                        // Place cursor at the end of the text
+                        const val = inputToFocus.value;
+                        inputToFocus.value = '';
+                        inputToFocus.value = val;
+                    }
+                }, 0);
+            }
+        }
+        
+        renderPairs();
+        dynamicFields.appendChild(table);
+        
+        // Add button to add new pair
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'btn btn-sm btn-outline-primary mt-2';
+        addBtn.innerHTML = `<i class="fas fa-plus"></i> ${editorTranslations[currentLanguage].addPair || 'Add Pair'}`;
+        addBtn.onclick = () => {
+            pairs.push({left:'',right:''});
+            renderPairs(pairs.length-1, 'left');
+        };
+        dynamicFields.appendChild(addBtn);
+    } else if (type === 'TrueFalse') {
+        const container = document.createElement('div');
+        container.className = 'mb-3';
+        
+        // Create the label with translation support
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.setAttribute('data-i18n', 'correctAnswer');
+        label.textContent = editorTranslations[currentLanguage].correctAnswer || 'Correct Answer';
+        
+        // Create true option
+        const trueDiv = document.createElement('div');
+        trueDiv.className = 'form-check';
+        
+        const trueInput = document.createElement('input');
+        trueInput.className = 'form-check-input';
+        trueInput.type = 'radio';
+        trueInput.name = 'trueFalseAnswer';
+        trueInput.id = 'answerTrue';
+        trueInput.value = 'true';
+        trueInput.checked = data.correctAnswer === 'true' || (!data.correctAnswer && true);
+        
+        const trueLabel = document.createElement('label');
+        trueLabel.className = 'form-check-label';
+        trueLabel.htmlFor = 'answerTrue';
+        trueLabel.setAttribute('data-i18n', 'true');
+        trueLabel.textContent = editorTranslations[currentLanguage].true || 'True';
+        
+        trueDiv.appendChild(trueInput);
+        trueDiv.appendChild(trueLabel);
+        
+        // Create false option
+        const falseDiv = document.createElement('div');
+        falseDiv.className = 'form-check';
+        
+        const falseInput = document.createElement('input');
+        falseInput.className = 'form-check-input';
+        falseInput.type = 'radio';
+        falseInput.name = 'trueFalseAnswer';
+        falseInput.id = 'answerFalse';
+        falseInput.value = 'false';
+        falseInput.checked = data.correctAnswer === 'false';
+        
+        const falseLabel = document.createElement('label');
+        falseLabel.className = 'form-check-label';
+        falseLabel.htmlFor = 'answerFalse';
+        falseLabel.setAttribute('data-i18n', 'false');
+        falseLabel.textContent = editorTranslations[currentLanguage].false || 'False';
+        
+        falseDiv.appendChild(falseInput);
+        falseDiv.appendChild(falseLabel);
+        
+        // Assemble the container
+        container.appendChild(label);
+        container.appendChild(trueDiv);
+        container.appendChild(falseDiv);
+        
+        dynamicFields.appendChild(container);
+        dynamicFields.appendChild(document.createElement('hr'));
+    }
+}
+
+typeSelect.onchange = () => renderDynamicFields(typeSelect.value);
+form.onsubmit = e => {
+    e.preventDefault();
+    // Gather data
+    const data = getFormData();
+    if (editingIndex !== null) {
+        questions[editingIndex] = data;
+        editingIndex = null;
+    } else {
+        questions.push(data);
+    }
+    renderQuestionsList();
+    form.reset();
+    renderDynamicFields(typeSelect.value);
+    
+    // Reset language content display to current language
+    if (currentLanguage === 'en_CA') {
+        enContent.style.display = 'block';
+        frContent.style.display = 'none';
+    } else {
+        enContent.style.display = 'none';
+        frContent.style.display = 'block';
+    }
+};
+
+function getFormData() {
+    const data = {
+        section: form.section.value,
+        type: form.type.value,
+        weight: parseInt(form.weight.value) || 1,
+        // Keep original fields for backward compatibility
+        text: form.text_en.value,
+        description: form.description_en.value,
+        // Store content for both languages
+        text_en: form.text_en.value,
+        text_fr: form.text_fr.value,
+        description_en: form.description_en.value,
+        description_fr: form.description_fr.value
+    };
+    
+    if (data.type === 'MultipleChoice' || data.type === 'Checkboxes') {
+        const options = Array.from(document.querySelectorAll('#optionsDiv input[type="text"]')).map(i=>i.value).filter(Boolean);
+        data.options = options;
+        
+        if (data.type === 'MultipleChoice') {
+            const correctIdx = Array.from(document.querySelectorAll('#optionsDiv input[type="radio"]')).findIndex(i=>i.checked);
+            data.correctAnswer = correctIdx >= 0 ? correctIdx : 0;
+        } else {
+            data.correctAnswer = Array.from(document.querySelectorAll('#optionsDiv input[type="checkbox"]'))
+                .map((chk, idx) => chk.checked ? idx : -1)
+                .filter(idx => idx >= 0);
+        }
+    } else if (data.type === 'MatchAnswers') {
+        const pairs = [];
+        const leftInputs = document.querySelectorAll('.match-table input[data-side="left"]');
+        const rightInputs = document.querySelectorAll('.match-table input[data-side="right"]');
+        for (let i = 0; i < leftInputs.length; i++) {
+            if (leftInputs[i].value && rightInputs[i].value) {
+                pairs.push({
+                    left: leftInputs[i].value,
+                    right: rightInputs[i].value
+                });
+            }
+        }
+        data.pairs = pairs;
+    } else if (data.type === 'TrueFalse') {
+        const selectedRadio = document.querySelector('input[name="trueFalseAnswer"]:checked');
+        data.correctAnswer = selectedRadio ? selectedRadio.value : 'true'; // Default to true if nothing selected
+    }
+    
+    return data;
+}
+resetBtn.onclick = () => {
+    editingIndex = null;
+    form.reset();
+    document.getElementById('text_en').value = '';
+    document.getElementById('description_en').value = '';
+    document.getElementById('text_fr').value = '';
+    document.getElementById('description_fr').value = '';
+    renderDynamicFields(typeSelect.value);
+};
+function renderQuestionsList() {
+    const list = document.getElementById('questionsList');
+    list.innerHTML = '';
+    if (!questions.length) {
+        list.innerHTML = `<div class="alert alert-info">${editorTranslations[currentLanguage].noQuestions}</div>`;
+        return;
+    }
+    questions.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card mb-2';
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body';
+        
+        // Get weight label
+        let weightLabel = 'Standard';
+        if (q.weight === 2) weightLabel = 'Important';
+        else if (q.weight === 3) weightLabel = 'Critical';
+        
+        // Display text based on current language
+        const displayText = currentLanguage === 'en_CA' ? (q.text_en || q.text) : (q.text_fr || q.text);
+        
+        // Get translated section name
+        const sectionKey = q.section;
+        const sectionName = editorTranslations[currentLanguage][sectionKey] || q.section;
+        
+        // Get translated type name
+        let typeKey;
+        if (q.type === 'MultipleChoice') typeKey = 'multipleChoice';
+        else if (q.type === 'Checkboxes') typeKey = 'checkboxes';
+        else if (q.type === 'MatchAnswers') typeKey = 'matchAnswers';
+        else if (q.type === 'TrueFalse') typeKey = 'trueFalse';
+        const typeName = typeKey ? editorTranslations[currentLanguage][typeKey] : q.type;
+        
+        // Get translated badge text
+        const badgeText = q.text_en && q.text_fr ? 
+            editorTranslations[currentLanguage].bilingual : 
+            (q.text_fr ? editorTranslations[currentLanguage].frOnly : editorTranslations[currentLanguage].enOnly);
+        
+        cardBody.innerHTML = `
+            <strong>${editorTranslations[currentLanguage].sectionLabel}:</strong> ${sectionName}<br>
+            <strong>${editorTranslations[currentLanguage].typeLabel}:</strong> ${typeName}<br>
+            <strong>${editorTranslations[currentLanguage].weightLabel}:</strong> ${weightLabel}<br>
+            <strong>${editorTranslations[currentLanguage].textLabel} (${currentLanguage === 'en_CA' ? 'EN' : 'FR'}):</strong> ${displayText}<br>
+            <div class="badge bg-info">${badgeText}</div>
+        `;
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-sm btn-primary me-2';
+        editBtn.innerHTML = `<i class="fas fa-edit"></i> ${editorTranslations[currentLanguage].edit}`;
+        editBtn.onclick = () => {
+            form.section.value = q.section;
+            form.type.value = q.type;
+            form.weight.value = q.weight || 1; // Default to 1 (Standard) if not set
+            
+            // Load both language contents
+            document.getElementById('text_en').value = q.text_en || q.text || '';
+            document.getElementById('description_en').value = q.description_en || q.description || '';
+            document.getElementById('text_fr').value = q.text_fr || '';
+            document.getElementById('description_fr').value = q.description_fr || '';
+            
+            editingIndex = idx;
+            renderDynamicFields(q.type, q);
+            
+            // Show the current language content
+            setLanguage(currentLanguage);
+        };
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-sm btn-danger';
+        delBtn.innerHTML = `<i class="fas fa-trash"></i> ${editorTranslations[currentLanguage].delete}`;
+        delBtn.onclick = () => {
+            if (confirm(editorTranslations[currentLanguage].deleteConfirm)) {
+                questions.splice(idx,1);
+                renderQuestionsList();
+            }
+        };
+        cardBody.appendChild(document.createElement('br'));
+        cardBody.appendChild(editBtn);
+        cardBody.appendChild(delBtn);
+        card.appendChild(cardBody);
+        list.appendChild(card);
+    });
+}
+// Language toggle function
+function setLanguage(lang) {
+    currentLanguage = lang;
+    
+    // Update active button styles
+    document.querySelectorAll('.lang-toggle .btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(lang));
+    });
+    
+    // Toggle content visibility and required attributes
+    if (lang === 'en_CA') {
+        // Show English, hide French
+        enContent.style.display = 'block';
+        frContent.style.display = 'none';
+        // Make English required, French not required
+        document.getElementById('text_en').setAttribute('required', '');
+        document.getElementById('text_fr').removeAttribute('required');
+    } else {
+        // Show French, hide English
+        enContent.style.display = 'none';
+        frContent.style.display = 'block';
+        // Make French required, English not required
+        document.getElementById('text_fr').setAttribute('required', '');
+        document.getElementById('text_en').removeAttribute('required');
+    }
+    
+    // Update all translations
+    updateTranslations();
+    
+    // Refresh questions list with new language
+    renderQuestionsList();
+}
+
+// Helper function to load language content when editing
+function loadLanguageContent(question) {
+    // Load English content
+    document.getElementById('text_en').value = question.text_en || '';
+    document.getElementById('description_en').value = question.description_en || '';
+    
+    // Load French content
+    document.getElementById('text_fr').value = question.text_fr || '';
+    document.getElementById('description_fr').value = question.description_fr || '';
+}
+
+// Function to update all translatable elements
+function updateTranslations() {
+    const translations = editorTranslations[currentLanguage];
+    if (!translations) return;
+    
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[key]) {
+            // For inputs with value attribute
+            if (el.tagName === 'INPUT' && el.type !== 'submit' && el.type !== 'button') {
+                el.value = translations[key];
+            }
+            // For option elements
+            else if (el.tagName === 'OPTION') {
+                el.textContent = translations[key];
+            }
+            // For buttons
+            else if (el.tagName === 'BUTTON' || el.type === 'submit' || el.type === 'button') {
+                // If button has an icon, preserve it
+                if (el.innerHTML.includes('<i class="fas')) {
+                    const iconMatch = el.innerHTML.match(/<i class="fas[^>]+><\/i>/i);
+                    if (iconMatch) {
+                        el.innerHTML = `${iconMatch[0]} ${translations[key]}`;
+                        return; // Use return instead of continue since we're in a forEach callback
+                    }
+                }
+                el.textContent = translations[key];
+            }
+            // For all other elements
+            else {
+                el.textContent = translations[key];
+            }
+        }
+    });
+}
+
+// Initialize
+renderDynamicFields(typeSelect.value);
+setLanguage('en_CA'); // This will also call renderQuestionsList()
+</script>
+</body>
+</html>
