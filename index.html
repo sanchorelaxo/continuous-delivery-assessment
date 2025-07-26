@@ -13,6 +13,7 @@
     <script src="js/translations.js"></script>
     <script src="js/scoring.js"></script>
     <script src="js/db-integration.js"></script>
+    <script src="js/question-loader.js"></script>
     <script src="js/auth/auth-service.js"></script>
     <script src="js/auth/auth-ui.js"></script>
     <script src="js/auth/assessment-history.js"></script>
@@ -54,8 +55,8 @@
         <!-- Language Toggle -->
         <div class="d-flex justify-content-end mb-4">
             <div class="lang-toggle">
-                <button class="btn btn-outline-primary active" onclick="setLanguage('en_CA')">EN</button>
-                <button class="btn btn-outline-primary ms-2" onclick="setLanguage('fr_CA')">FR</button>
+                <button class="btn btn-outline-primary active" onclick="setLanguage('en_CA')" id="lang-en">EN</button>
+                <button class="btn btn-outline-primary ms-2" onclick="setLanguage('fr_CA')" id="lang-fr">FR</button>
             </div>
         </div>
 
@@ -226,13 +227,33 @@
         window.currentResults = null;
         window.currentChartData = null;
         
-        // Initialize totalQuestions
-        window.totalQuestions = Object.values(translations.questionDatabase).reduce((total, questions) => total + questions.length, 0);
+        // Initialize totalQuestions (will be updated when questions are loaded)
 
         /**
          * Initialize the assessment by generating questions from the database
          */
         window.initializeAssessment = function() {
+            const form = document.getElementById('assessment-questions');
+            const currentLang = document.documentElement.lang;
+            const ui = translations.ui[currentLang];
+            
+            // Check if we should use the question loader
+            if (window.questionLoader) {
+                // Use the question loader to render questions
+                window.questionLoader.renderQuestions().catch(error => {
+                    console.error('Error rendering questions:', error);
+                    // Fall back to legacy question loading if dynamic loading fails
+                    initializeLegacyAssessment();
+                });
+                return;
+            }
+            
+            // Legacy initialization if question loader is not available
+            initializeLegacyAssessment();
+        };
+        
+        // Legacy initialization function using hardcoded questions
+        window.initializeLegacyAssessment = function() {
             const form = document.getElementById('assessment-questions');
             const currentLang = document.documentElement.lang;
             const ui = translations.ui[currentLang];
@@ -409,10 +430,17 @@
             window.currentLang = lang;
             // Update HTML lang attribute
             document.documentElement.lang = lang;
-            // Ensure translations are loaded
-            if (!translations.questions[lang]) {
-                console.error('Translations not found for language:', lang);
-                return;
+            
+            // If question loader is available, use it for dynamic loading
+            if (window.questionLoader) {
+                // Save current form values before changing language
+                window.questionLoader.saveFormValues();
+            } else {
+                // Legacy fallback - ensure translations are loaded
+                if (!translations.questions && !translations.questionDatabase) {
+                    console.error('Translations not found for language:', lang);
+                    return;
+                }
             }
             
             // Update active button
@@ -465,36 +493,69 @@
             // Update section titles
             document.getElementById('practice-areas-title').textContent = ui.practiceAreas;
             
-            // Clear existing scrollspy
-            const scrollSpyContent = document.querySelector('.col-md-9');
-            bootstrap.ScrollSpy.getInstance(scrollSpyContent)?.dispose();
+            // Check if we're currently viewing results
+            const resultsContainer = document.getElementById('results-container');
+            const isViewingResults = resultsContainer && resultsContainer.style.display !== 'none';
             
-            // Reinitialize the assessment with new language
-            window.initializeAssessment();
-            
-            // Restore previous responses
-            window.userResponses = currentResponses;
-            
-            // Restore previous assessment info values
-            document.getElementById('author-email').value = currentAssessmentInfo.authorEmail;
-            document.getElementById('team-name').value = currentAssessmentInfo.teamName;
-            document.getElementById('system-name').value = currentAssessmentInfo.systemName;
-            
-            // Update radio buttons based on stored responses
-            Object.entries(currentResponses).forEach(([questionId, optionIndex]) => {
-                const input = document.querySelector(`input[name="${questionId}"][value="${optionIndex}"]`);
-                if (input) {
-                    input.checked = true;
+            if (isViewingResults) {
+                // If viewing results, just update the UI translations without re-calculating or fetching data
+                window.updateResultsUITranslations(ui, lang);
+                
+                // Update the radar chart labels if needed (without recalculating data)
+                if (window.currentChartData && window.radarChart) {
+                    // Update chart labels to new language
+                    const practiceAreaTranslations = translations.practiceAreas[lang] || translations.practiceAreas.en_CA;
+                    window.currentChartData.labels = window.currentChartData.labels.map(label => {
+                        // Find the practice area key that matches this label
+                        const areaKey = Object.keys(practiceAreaTranslations).find(key => 
+                            practiceAreaTranslations[key] === label || 
+                            translations.practiceAreas.en_CA[key] === label ||
+                            translations.practiceAreas.fr_CA[key] === label
+                        );
+                        return areaKey ? practiceAreaTranslations[areaKey] : label;
+                    });
+                    
+                    // Update the chart with new labels
+                    window.radarChart.data.labels = window.currentChartData.labels;
+                    window.radarChart.update();
                 }
-            });
-            
-            // Initialize new scrollspy after a short delay to ensure DOM is updated
-            setTimeout(() => {
-                new bootstrap.ScrollSpy(scrollSpyContent, {
-                    target: '#practice-areas-nav',
-                    offset: 100
+            } else {
+                // Only reinitialize assessment if we're not viewing results
+                // Clear existing scrollspy
+                const scrollSpyContent = document.querySelector('.col-md-9');
+                bootstrap.ScrollSpy.getInstance(scrollSpyContent)?.dispose();
+                
+                // Reinitialize the assessment with new language
+                window.initializeAssessment();
+                
+                // Restore previous responses
+                window.userResponses = currentResponses;
+                
+                // Restore previous assessment info values with null checks
+                const authorEmailEl = document.getElementById('author-email');
+                const teamNameEl = document.getElementById('team-name');
+                const systemNameEl = document.getElementById('system-name');
+                
+                if (authorEmailEl) authorEmailEl.value = currentAssessmentInfo.authorEmail || '';
+                if (teamNameEl) teamNameEl.value = currentAssessmentInfo.teamName || '';
+                if (systemNameEl) systemNameEl.value = currentAssessmentInfo.systemName || '';
+                
+                // Update radio buttons based on stored responses
+                Object.entries(currentResponses).forEach(([questionId, optionIndex]) => {
+                    const input = document.querySelector(`input[name="${questionId}"][value="${optionIndex}"]`);
+                    if (input) {
+                        input.checked = true;
+                    }
                 });
-            }, 100);
+                
+                // Initialize new scrollspy after a short delay to ensure DOM is updated
+                setTimeout(() => {
+                    new bootstrap.ScrollSpy(scrollSpyContent, {
+                        target: '#practice-areas-nav',
+                        offset: 100
+                    });
+                }, 100);
+            }
             
             document.getElementById('overall-maturity-title').textContent = ui.overallMaturity;
             document.getElementById('practice-area-title').textContent = ui.practiceAreaMaturity;
@@ -508,22 +569,20 @@
 
             // Clear and reinitialize the assessment form
             const assessmentForm = document.getElementById('assessment-questions');
-            assessmentForm.innerHTML = '';
-            window.initializeAssessment();
             
-            // If results are currently displayed, recalculate them with the new language
-            if (document.getElementById('results-container').style.display === 'block') {
-                // Destroy existing chart to prevent memory leaks
-                if (window.radarChart) {
-                    window.radarChart.destroy();
-                }
-                
-                // Calculate scores and update display
-                const results = window.calculateResults();
-                
-                // Update progress
-                window.updateProgress();
+            // Use question loader if available, otherwise fall back to legacy initialization
+            if (window.questionLoader) {
+                // Dispatch language changed event for question loader
+                document.dispatchEvent(new CustomEvent('languageChanged', { 
+                    detail: { language: lang }
+                }));
+            } else {
+                // Legacy fallback
+                assessmentForm.innerHTML = '';
+                window.initializeAssessment();
             }
+            
+
 
             // Update practice areas menu
             const practiceAreasNav = document.getElementById('practice-areas-nav');
@@ -738,8 +797,9 @@
          * Calculate and display assessment results
          */
         window.calculateResults = function() {
-            // Calculate scores
-            const results = window.calculateScores(window.userResponses, translations.questionDatabase);
+            // Calculate scores using dynamically loaded questions
+            const questionDb = window.questionLoader ? window.questionLoader.cache[window.questionLoader.currentLanguage] : translations.questionDatabase;
+            const results = window.calculateScores(window.userResponses, questionDb);
             
             // Generate radar chart data
             const chartData = window.generateRadarChartData(results);
@@ -1011,6 +1071,82 @@
         }
         
         /**
+         * Update only the UI translations in results view without recalculating anything
+         */
+        window.updateResultsUITranslations = function(ui, lang) {
+            // Update main titles
+            const resultsTitle = document.getElementById('results-title');
+            const overallMaturityTitle = document.getElementById('overall-maturity-title');
+            const practiceAreaTitle = document.getElementById('practice-area-title');
+            
+            if (resultsTitle) resultsTitle.textContent = ui.resultsTitle || 'Assessment Results';
+            if (overallMaturityTitle) overallMaturityTitle.textContent = ui.overallMaturity || 'Overall Maturity';
+            if (practiceAreaTitle) practiceAreaTitle.textContent = ui.practiceAreaMaturity || 'Practice Area Maturity';
+            
+            // Update button texts
+            const exportBtn = document.getElementById('export-btn');
+            const confluenceBtn = document.getElementById('confluence-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            
+            if (exportBtn) exportBtn.textContent = ui.exportCsv;
+            if (confluenceBtn) confluenceBtn.textContent = ui.saveToConfluence;
+            if (restartBtn) restartBtn.textContent = ui.restart;
+            
+            // Update scroll to top button
+            const scrollTopBtn = document.getElementById('scroll-top');
+            if (scrollTopBtn) {
+                scrollTopBtn.innerHTML = `<i class="bi bi-arrow-up"></i> ${ui.scrollToTop}`;
+            }
+            
+            // Update practice area names in the results list
+            const areaResultsList = document.getElementById('area-results');
+            if (areaResultsList && window.currentResults) {
+                const practiceAreaTranslations = translations.practiceAreas[lang] || translations.practiceAreas.en_CA;
+                const listItems = areaResultsList.querySelectorAll('li');
+                
+                Object.keys(window.currentResults).forEach((area, index) => {
+                    if (area === 'overall') return;
+                    
+                    const listItem = listItems[index];
+                    if (listItem) {
+                        const areaTitle = practiceAreaTranslations[area.replace('-', '')] || area
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, str => str.toUpperCase());
+                        
+                        const span = listItem.querySelector('span:first-child');
+                        if (span) span.textContent = areaTitle;
+                    }
+                });
+            }
+            
+            // Update any recommendation text (without recalculating)
+            const recommendationsContainer = document.getElementById('recommendations');
+            if (recommendationsContainer && window.currentResults) {
+                // Update static recommendation text elements
+                const nextStepsTitle = recommendationsContainer.querySelector('h4');
+                if (nextStepsTitle) nextStepsTitle.textContent = ui.nextSteps;
+                
+                // Update list items with new translations
+                const listItems = recommendationsContainer.querySelectorAll('ol li');
+                if (listItems.length >= 4) {
+                    listItems[0].textContent = ui.shareResults;
+                    listItems[1].textContent = ui.createRoadmap;
+                    listItems[2].textContent = ui.setGoals;
+                    listItems[3].textContent = ui.reassess;
+                }
+            }
+            
+            // Update success message if it exists
+            const successAlert = document.querySelector('.alert-success');
+            if (successAlert && ui.assessmentSaved && ui.assessmentHistory) {
+                successAlert.innerHTML = `
+                    ${ui.assessmentSaved} <a href="#" onclick="window.assessmentHistoryUI.showHistory(event); return false;">${ui.assessmentHistory}</a>.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+            }
+        };
+        
+        /**
          * Display the assessment results
          */
         window.displayResults = function(results, chartData) {
@@ -1020,8 +1156,8 @@
                 return;
             }
             
-            const lang = document.documentElement.lang || 'en';
-            const ui = translations.ui[lang];
+            const lang = document.documentElement.lang || 'en_CA';
+            const ui = translations.ui[lang] || translations.ui.en_CA;
             
             // Update title
             document.querySelector('#results-container h2').textContent = ui.resultsTitle;
@@ -1246,7 +1382,8 @@
          */
         window.exportResultsAsCsv = function() {
             // Calculate results again to ensure we have the latest data
-            const results = window.calculateScores(window.userResponses, translations.questionDatabase);
+            const questionDb = window.questionLoader ? window.questionLoader.cache[window.questionLoader.currentLanguage] : translations.questionDatabase;
+            const results = window.calculateScores(window.userResponses, questionDb);
             
             // Récupérer les informations d'évaluation
             const authorEmailEl = document.getElementById('author-email');
@@ -1312,7 +1449,8 @@
                 const pageTitle = `CD Maturity Assessment - ${assessmentInfo.teamName} - ${today}`;
                 
                 // Get the results data for structured content
-                const results = window.calculateScores(window.userResponses, translations.questionDatabase);
+                const questionDb = window.questionLoader ? window.questionLoader.cache[window.questionLoader.currentLanguage] : translations.questionDatabase;
+                const results = window.calculateScores(window.userResponses, questionDb);
                 
                 // Create structured Confluence content in Markdown format
                 let confluenceContent = `# ${pageTitle}

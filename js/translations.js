@@ -1,3 +1,4 @@
+// Translations for UI elements and question database (legacy)
 window.translations = {
     ui: {
         en_CA: {
@@ -56,7 +57,9 @@ window.translations = {
             saveToConfluence: "Save to Confluence",
             confluenceSaving: "Saving to Confluence...",
             confluenceSuccess: "Successfully saved to Confluence!",
-            confluenceError: "Error saving to Confluence. Please try again."
+            confluenceError: "Error saving to Confluence. Please try again.",
+            assessmentSaved: "Assessment saved successfully! You can view it in your",
+            assessmentHistory: "assessment history"
         },
         fr_CA: {
             calculateResults: "Calculer les Résultats",
@@ -114,7 +117,9 @@ window.translations = {
             saveToConfluence: "Sauvegarder dans Confluence",
             confluenceSaving: "Sauvegarde dans Confluence...",
             confluenceSuccess: "Sauvegardé avec succès dans Confluence !",
-            confluenceError: "Erreur lors de la sauvegarde dans Confluence. Veuillez réessayer."
+            confluenceError: "Erreur lors de la sauvegarde dans Confluence. Veuillez réessayer.",
+            assessmentSaved: "Évaluation sauvegardée avec succès ! Vous pouvez la consulter dans votre",
+            assessmentHistory: "historique des évaluations"
         }
     },
     questionDatabase: {

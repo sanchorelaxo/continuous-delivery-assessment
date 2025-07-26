@@ -30,10 +30,13 @@
 - [x] Create admin configuration system with security validation
 - [x] Implement question editor for admins (edit/add/delete questions, set weights/content)
 - [x] Add weight selection feature (select element with 3 options: low, medium, high)
-- [ ] Refactor frontend (main and admin pages) and backend to load questions from MongoDB
-- [ ] Update score calculation logic to support variable number of questions per section
-- [ ] Migrate existing questions into MongoDB
-- [ ] Add user/group management UI for admins
+- [x] Refactor frontend (main and admin pages) and backend to load questions from MongoDB
+- [x] Update score calculation logic to support variable number of questions per section
+- [x] Migrate existing questions into MongoDB
+- [x] Debug and fix frontend issues (progress tracking, Calculate Results button, language toggle, UI translations)
+- [ ] Debug user management UI for admins
+- [ ] Add group management UI for admins
+- [ ] Add Assessment Analytics UI for admins
 
 ## Current Goal
-Refactor frontend (main and admin pages) and backend to load questions from MongoDB
+Debug user management UI for admins

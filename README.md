@@ -38,15 +38,16 @@ A comprehensive web-based assessment tool to evaluate an organization's continuo
 2. Install dependencies: `npm install`
 3. Configure environment variables (copy `.env.example` to `.env` and adjust as needed)
 4. Ensure MongoDB server is installed and running (see MongoDB Setup section below)
-5. Start the server: `npm start` or `node server/server.js`
-6. Open `http://localhost:3000` in your browser
-7. Register a new account or log in with default admin credentials
-8. Select your preferred language (EN/FR)
-9. Complete the assessment questions
-10. View your results and recommendations
-11. Access your assessment history through the History tab
-12. Toggle between current and cumulative results
-13. Administrators can manage users and groups through the Admin dashboard
+5. **Populate MongoDB with assessment questions**: `cd server/scripts && node migrate-questions.js`
+6. Start the server: `npm start` or `node server/server.js`
+7. Open `http://localhost:3000` in your browser
+8. Register a new account or log in with default admin credentials
+9. Select your preferred language (EN/FR)
+10. Complete the assessment questions
+11. View your results and recommendations
+12. Access your assessment history through the History tab
+13. Toggle between current and cumulative results
+14. Administrators can manage users and groups through the Admin dashboard
 
 ## Technical Stack
 
@@ -104,6 +105,24 @@ A comprehensive web-based assessment tool to evaluate an organization's continuo
    ```bash
    mongosh --eval "db.runCommand({ connectionStatus: 1 })"
    ```
+
+### Initial Database Setup
+
+**IMPORTANT**: Before starting the application for the first time, you must populate the MongoDB database with assessment questions.
+
+1. **Migrate Assessment Questions to MongoDB**:
+   ```bash
+   cd server/scripts
+   node migrate-questions.js
+   ```
+   
+   This script will:
+   - Extract 48 assessment questions from the existing translations file
+   - Transform them for MongoDB with multilingual support (English/French)
+   - Insert them into the `cd_assessment.questions` collection
+   - Create necessary database indexes
+   
+   **Note**: This script can be run multiple times safely - it will only insert questions if they don't already exist.
 
 ### Running the Test Users Script
 

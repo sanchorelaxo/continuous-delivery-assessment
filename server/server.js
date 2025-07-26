@@ -14,6 +14,7 @@ const mongoConfig = require('./config/mongodb');
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
+const questionRoutes = require('./routes/questions');
 
 // Import auth middleware
 const { authenticateToken, optionalAuth } = require('./middleware/auth');
@@ -788,5 +789,6 @@ app.post('/api/assessments/compare', optionalAuth, async (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/questions', questionRoutes);
 
 startServer().catch(console.error);
