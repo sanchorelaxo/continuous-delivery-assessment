@@ -38,6 +38,9 @@
                     <li class="nav-item admin-only d-none">
                         <a class="nav-link" href="#" id="nav-admin">Admin</a>
                     </li>
+                    <li class="nav-item admin-only d-none">
+                        <a class="nav-link" href="admin/question-editor.html" id="nav-question-editor">Question Editor</a>
+                    </li>
                 </ul>
                 <!-- Auth dropdown will be inserted here by auth-ui.js -->
             </div>
@@ -68,7 +71,7 @@
                     <div class="sticky-top pt-3">
                         <div class="card">
                             <div class="card-header">
-                                <span id="practice-areas-title">Practice Areas</span>
+                                <span id="practice-areas-title" data-i18n="practiceAreas">Practice Areas</span>
                             </div>
                             <div class="card-body p-0">
                                 <nav id="practice-areas-nav" class="nav nav-pills flex-column p-3">
@@ -306,9 +309,13 @@
                 section.className = 'practice-area mb-5';
                 
                 // Get the practice area title from translations or fallback to formatted area name
-                const areaTitle = translations.practiceAreas?.[currentLang]?.[area.replace('-', '')] || 
-                    (area === 'applicationArchitecture' ? 'Application Architecture' : 
-                    area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+                let areaTitle = '';
+                if (translations.practiceAreas && translations.practiceAreas[currentLang] && translations.practiceAreas[currentLang][area]) {
+                    areaTitle = translations.practiceAreas[currentLang][area];
+                } else {
+                    // Fallback: convert camelCase to proper title case
+                    areaTitle = area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                }
                 
                 // Add practice area header
                 section.innerHTML = `
@@ -590,9 +597,15 @@
             Object.entries(translations.questionDatabase).forEach(([area, questions]) => {
                 const link = document.createElement('a');
                 link.href = `#section-${area}`;
-                const title = translations.practiceAreas[lang][area.replace('-', '')] || 
-                    (area === 'applicationArchitecture' ? 'Application Architecture' : 
-                    area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+                
+                // Get the proper title from translations with fallback
+                let title = '';
+                if (translations.practiceAreas && translations.practiceAreas[lang] && translations.practiceAreas[lang][area]) {
+                    title = translations.practiceAreas[lang][area];
+                } else {
+                    // Fallback: convert camelCase to proper title case
+                    title = area.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                }
                 
                 link.className = 'nav-link';
                 link.textContent = title;

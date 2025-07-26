@@ -206,15 +206,23 @@ window.questionLoader = {
                 return;
             }
             
-            // Format practice area name for display
-            const formattedName = practiceArea.replace(/([A-Z])/g, ' $1').trim();
+            // Get practice area title from translations with fallback
+            let practiceAreaTitle = '';
+            if (window.translations && window.translations.practiceAreas && 
+                window.translations.practiceAreas[this.currentLanguage] && 
+                window.translations.practiceAreas[this.currentLanguage][practiceArea]) {
+                practiceAreaTitle = window.translations.practiceAreas[this.currentLanguage][practiceArea];
+            } else {
+                // Fallback: convert camelCase to proper title case
+                practiceAreaTitle = practiceArea.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            }
             
             // Add to navigation
             if (practiceAreasNav) {
                 const navItem = document.createElement('a');
                 navItem.className = 'nav-link' + (index === 0 ? ' active' : '');
                 navItem.href = `#${practiceArea}`;
-                navItem.textContent = formattedName;
+                navItem.textContent = practiceAreaTitle;
                 practiceAreasNav.appendChild(navItem);
             }
             
@@ -226,7 +234,7 @@ window.questionLoader = {
             // Add heading
             const heading = document.createElement('h2');
             heading.className = 'mb-4';
-            heading.textContent = formattedName;
+            heading.textContent = practiceAreaTitle;
             section.appendChild(heading);
             
             // Add questions
@@ -584,6 +592,11 @@ createQuestionElement: function(question, practiceArea) {
                     window.updateProgress();
                 }
             }
+            
+            // Auto-scroll to next question
+            setTimeout(() => {
+                this.moveToNextQuestion(e.target.closest('.card'));
+            }, 300); // Small delay to allow the selection to be visually confirmed
         });
         
         const label = document.createElement('label');
@@ -630,6 +643,53 @@ getWeightText: function(weight) {
         case 2: return uiTranslations.important || 'Important';
         case 3: return uiTranslations.critical || 'Critical';
         default: return uiTranslations.standard || 'Standard';
+    }
+},
+
+/**
+ * Move to the next question after an answer is selected
+ * @param {HTMLElement} currentQuestionCard - The current question card element
+ */
+moveToNextQuestion: function(currentQuestionCard) {
+    if (!currentQuestionCard) return;
+    
+    // Find the next question card in the same practice area
+    let nextQuestionCard = currentQuestionCard.nextElementSibling;
+    while (nextQuestionCard && !nextQuestionCard.classList.contains('card')) {
+        nextQuestionCard = nextQuestionCard.nextElementSibling;
+    }
+    
+    if (nextQuestionCard && nextQuestionCard.querySelector('.form-check-input')) {
+        // Found next question in same practice area
+        nextQuestionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        // Look for the next practice area's first question
+        const currentSection = currentQuestionCard.closest('.practice-area-section');
+        if (currentSection) {
+            let nextSection = currentSection.nextElementSibling;
+            while (nextSection && !nextSection.classList.contains('practice-area-section')) {
+                nextSection = nextSection.nextElementSibling;
+            }
+            
+            if (nextSection) {
+                const firstQuestionInNextSection = nextSection.querySelector('.card');
+                if (firstQuestionInNextSection) {
+                    firstQuestionInNextSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Update the active practice area in the navigation
+                    const sectionId = nextSection.id;
+                    const navLink = document.querySelector(`#practice-areas-nav .nav-link[href="#${sectionId}"]`);
+                    if (navLink) {
+                        // Remove active class from all nav links
+                        document.querySelectorAll('#practice-areas-nav .nav-link').forEach(link => {
+                            link.classList.remove('active');
+                        });
+                        // Add active class to the new nav link
+                        navLink.classList.add('active');
+                    }
+                }
+            }
+        }
     }
 }
 };

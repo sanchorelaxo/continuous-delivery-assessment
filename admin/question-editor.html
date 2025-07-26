@@ -14,9 +14,43 @@
         .match-table input[type="text"] { width: 100%; }
         .match-table th, .match-table td { padding: 0.5rem; }
         .match-table .remove-btn { color: #dc3545; cursor: pointer; }
+        
+        /* Questions table styling */
+        #questionsTable { font-size: 0.85rem; }
+        #questionsTable td { vertical-align: middle; }
+        .action-buttons { white-space: nowrap; }
+        .action-buttons .btn { margin-right: 0.25rem; }
+        .action-buttons .btn:last-child { margin-right: 0; }
     </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">CD Assessment</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html" id="nav-assessment">Assessment</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html#history" id="nav-history">History</a>
+                    </li>
+                    <li class="nav-item admin-only d-none">
+                        <a class="nav-link" href="../index.html#admin" id="nav-admin">Admin</a>
+                    </li>
+                    <li class="nav-item admin-only d-none">
+                        <a class="nav-link active" href="question-editor.html" id="nav-question-editor">Question Editor</a>
+                    </li>
+                </ul>
+                <!-- Auth dropdown will be inserted here by auth-ui.js -->
+            </div>
+        </div>
+    </nav>
+
 <div class="container question-editor-container">
     <h1 class="mb-4"><span data-i18n="editorTitle">Question Editor</span> <span class="badge bg-secondary" data-i18n="adminBadge">Admin</span></h1>
     
@@ -86,7 +120,24 @@
     </form>
     <hr class="my-4">
     <h3 data-i18n="existingQuestions">Existing Questions</h3>
-    <div id="questionsList"></div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="questionsTable">
+            <thead class="table-dark">
+                <tr>
+                    <th data-i18n="sectionLabel">Section</th>
+                    <th data-i18n="typeLabel">Type</th>
+                    <th data-i18n="weightLabel">Weight</th>
+                    <th data-i18n="textLabel">Question Text</th>
+                    <th data-i18n="actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="questionsTableBody">
+                <tr>
+                    <td colspan="5" class="text-center text-muted" data-i18n="loadingQuestions">Loading questions...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 <script>
 // Translation object for the question editor
@@ -142,6 +193,10 @@ const editorTranslations = {
         bilingual: "Bilingual",
         enOnly: "EN only",
         frOnly: "FR only",
+        actions: "Actions",
+        loadingQuestions: "Loading questions...",
+        noQuestionsFound: "No questions found.",
+        errorLoadingQuestions: "Error loading questions. Please try again.",
         
         // Dynamic field labels and placeholders
         options: "Options",
@@ -229,7 +284,11 @@ const editorTranslations = {
         textLabel: "Texte",
         bilingual: "Bilingue",
         enOnly: "EN seulement",
-        frOnly: "FR seulement"
+        frOnly: "FR seulement",
+        actions: "Actions",
+        loadingQuestions: "Chargement des questions...",
+        noQuestionsFound: "Aucune question trouvée.",
+        errorLoadingQuestions: "Erreur lors du chargement des questions. Veuillez réessayer."
     }
 };
 
@@ -597,86 +656,170 @@ resetBtn.onclick = () => {
     document.getElementById('description_fr').value = '';
     renderDynamicFields(typeSelect.value);
 };
-function renderQuestionsList() {
-    const list = document.getElementById('questionsList');
-    list.innerHTML = '';
+
+// Load questions from MongoDB
+async function loadQuestionsFromDB() {
+    const tableBody = document.getElementById('questionsTableBody');
+    
+    try {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">' + 
+                             editorTranslations[currentLanguage].loadingQuestions + '</td></tr>';
+        
+        const response = await fetch('/api/questions?includeInactive=true');
+        if (!response.ok) {
+            throw new Error('Failed to fetch questions');
+        }
+        
+        const data = await response.json();
+        // API returns questions grouped by practice area, flatten them
+        questions = [];
+        if (data.success && data.data) {
+            Object.values(data.data).forEach(practiceAreaQuestions => {
+                questions = questions.concat(practiceAreaQuestions);
+            });
+        }
+        renderQuestionsTable();
+    } catch (error) {
+        console.error('Error loading questions:', error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">' + 
+                             editorTranslations[currentLanguage].errorLoadingQuestions + '</td></tr>';
+    }
+}
+
+// Render questions in table format
+function renderQuestionsTable() {
+    const tableBody = document.getElementById('questionsTableBody');
+    tableBody.innerHTML = '';
+    
     if (!questions.length) {
-        list.innerHTML = `<div class="alert alert-info">${editorTranslations[currentLanguage].noQuestions}</div>`;
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">' + 
+                             editorTranslations[currentLanguage].noQuestionsFound + '</td></tr>';
         return;
     }
+    
     questions.forEach((q, idx) => {
-        const card = document.createElement('div');
-        card.className = 'card mb-2';
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
+        const row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+        row.className = 'question-row';
         
-        // Get weight label
-        let weightLabel = 'Standard';
-        if (q.weight === 2) weightLabel = 'Important';
-        else if (q.weight === 3) weightLabel = 'Critical';
+        // Get the appropriate text based on current language
+        const questionText = q.text && q.text[currentLanguage] ? q.text[currentLanguage] : 
+                           (q.text && q.text.en_CA ? q.text.en_CA : 'No text available');
         
-        // Display text based on current language
-        const displayText = currentLanguage === 'en_CA' ? (q.text_en || q.text) : (q.text_fr || q.text);
+        // Truncate long text for table display
+        const truncatedText = questionText.length > 60 ? 
+                             questionText.substring(0, 60) + '...' : questionText;
         
-        // Get translated section name
-        const sectionKey = q.section;
-        const sectionName = editorTranslations[currentLanguage][sectionKey] || q.section;
+        // Convert weight integer to text equivalent
+        let weightText = 'Standard';
+        if (q.weight === 1) weightText = editorTranslations[currentLanguage].standardWeight || 'Standard';
+        else if (q.weight === 2) weightText = editorTranslations[currentLanguage].importantWeight || 'Important';
+        else if (q.weight === 3) weightText = editorTranslations[currentLanguage].criticalWeight || 'Critical';
         
-        // Get translated type name
-        let typeKey;
-        if (q.type === 'MultipleChoice') typeKey = 'multipleChoice';
-        else if (q.type === 'Checkboxes') typeKey = 'checkboxes';
-        else if (q.type === 'MatchAnswers') typeKey = 'matchAnswers';
-        else if (q.type === 'TrueFalse') typeKey = 'trueFalse';
-        const typeName = typeKey ? editorTranslations[currentLanguage][typeKey] : q.type;
-        
-        // Get translated badge text
-        const badgeText = q.text_en && q.text_fr ? 
-            editorTranslations[currentLanguage].bilingual : 
-            (q.text_fr ? editorTranslations[currentLanguage].frOnly : editorTranslations[currentLanguage].enOnly);
-        
-        cardBody.innerHTML = `
-            <strong>${editorTranslations[currentLanguage].sectionLabel}:</strong> ${sectionName}<br>
-            <strong>${editorTranslations[currentLanguage].typeLabel}:</strong> ${typeName}<br>
-            <strong>${editorTranslations[currentLanguage].weightLabel}:</strong> ${weightLabel}<br>
-            <strong>${editorTranslations[currentLanguage].textLabel} (${currentLanguage === 'en_CA' ? 'EN' : 'FR'}):</strong> ${displayText}<br>
-            <div class="badge bg-info">${badgeText}</div>
+        row.innerHTML = `
+            <td>${editorTranslations[currentLanguage][q.practiceArea] || q.practiceArea}</td>
+            <td>${editorTranslations[currentLanguage][q.type] || q.type}</td>
+            <td>${weightText}</td>
+            <td title="${questionText}">${truncatedText}</td>
+            <td class="action-buttons">
+                <button class="btn btn-sm btn-primary" onclick="editQuestion(${idx}); event.stopPropagation();">
+                    <i class="fas fa-edit"></i> ${editorTranslations[currentLanguage].edit}
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${idx}); event.stopPropagation();">
+                    <i class="fas fa-trash"></i> ${editorTranslations[currentLanguage].delete}
+                </button>
+            </td>
         `;
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-sm btn-primary me-2';
-        editBtn.innerHTML = `<i class="fas fa-edit"></i> ${editorTranslations[currentLanguage].edit}`;
-        editBtn.onclick = () => {
-            form.section.value = q.section;
-            form.type.value = q.type;
-            form.weight.value = q.weight || 1; // Default to 1 (Standard) if not set
-            
-            // Load both language contents
-            document.getElementById('text_en').value = q.text_en || q.text || '';
-            document.getElementById('description_en').value = q.description_en || q.description || '';
-            document.getElementById('text_fr').value = q.text_fr || '';
-            document.getElementById('description_fr').value = q.description_fr || '';
-            
-            editingIndex = idx;
-            renderDynamicFields(q.type, q);
-            
-            // Show the current language content
-            setLanguage(currentLanguage);
-        };
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn btn-sm btn-danger';
-        delBtn.innerHTML = `<i class="fas fa-trash"></i> ${editorTranslations[currentLanguage].delete}`;
-        delBtn.onclick = () => {
-            if (confirm(editorTranslations[currentLanguage].deleteConfirm)) {
-                questions.splice(idx,1);
-                renderQuestionsList();
-            }
-        };
-        cardBody.appendChild(document.createElement('br'));
-        cardBody.appendChild(editBtn);
-        cardBody.appendChild(delBtn);
-        card.appendChild(cardBody);
-        list.appendChild(card);
+        
+        // Add click handler for row selection
+        row.onclick = () => selectQuestionRow(idx, row);
+        
+        tableBody.appendChild(row);
     });
+}
+
+// Select a question row and populate form
+function selectQuestionRow(idx, row) {
+    // Remove previous selection
+    document.querySelectorAll('.question-row').forEach(r => {
+        r.classList.remove('table-active');
+    });
+    
+    // Highlight selected row
+    row.classList.add('table-active');
+    
+    // Populate form with question data
+    const question = questions[idx];
+    populateFormWithQuestion(question);
+    editingIndex = idx;
+}
+
+// Edit question function
+function editQuestion(idx) {
+    const question = questions[idx];
+    populateFormWithQuestion(question);
+    editingIndex = idx;
+    
+    // Highlight the row
+    const rows = document.querySelectorAll('.question-row');
+    rows.forEach(r => r.classList.remove('table-active'));
+    rows[idx].classList.add('table-active');
+}
+
+// Delete question function
+function deleteQuestion(idx) {
+    if (confirm(editorTranslations[currentLanguage].deleteConfirm)) {
+        questions.splice(idx, 1);
+        renderQuestionsTable();
+        // Clear form if this question was being edited
+        if (editingIndex === idx) {
+            form.reset();
+            editingIndex = null;
+        }
+    }
+}
+
+// Populate form with question data based on current language
+function populateFormWithQuestion(question) {
+    // Set basic fields
+    document.getElementById('section').value = question.practiceArea || '';
+    document.getElementById('type').value = question.type || '';
+    document.getElementById('weight').value = question.weight || '';
+    
+    // Set text fields based on current language
+    const textEn = document.getElementById('text_en');
+    const textFr = document.getElementById('text_fr');
+    const descEn = document.getElementById('description_en');
+    const descFr = document.getElementById('description_fr');
+    
+    if (textEn) textEn.value = question.text?.en_CA || '';
+    if (textFr) textFr.value = question.text?.fr_CA || '';
+    if (descEn) descEn.value = question.description?.en_CA || '';
+    if (descFr) descFr.value = question.description?.fr_CA || '';
+    
+    // Transform MongoDB options structure for form rendering
+    const transformedQuestion = { ...question };
+    if (question.options && Array.isArray(question.options)) {
+        // Extract text values from MongoDB option objects based on current language
+        transformedQuestion.options = question.options.map((option, index) => {
+            if (option.text && typeof option.text === 'object') {
+                return option.text[currentLanguage] || option.text.en_CA || '';
+            }
+            return option.text || option || '';
+        });
+        
+        // Handle correct answer - find the option with the highest value
+        if (question.options.length > 0) {
+            const correctOption = question.options.reduce((max, option) => 
+                (option.value > max.value) ? option : max
+            );
+            const correctIndex = question.options.indexOf(correctOption);
+            transformedQuestion.correctAnswer = correctIndex >= 0 ? correctIndex.toString() : '';
+        }
+    }
+    
+    // Render dynamic fields for the question type
+    renderDynamicFields(question.type, transformedQuestion);
 }
 // Language toggle function
 function setLanguage(lang) {
@@ -707,8 +850,14 @@ function setLanguage(lang) {
     // Update all translations
     updateTranslations();
     
-    // Refresh questions list with new language
-    renderQuestionsList();
+    // If currently editing a question, refresh the dynamic fields with new language
+    if (editingIndex !== null && questions[editingIndex]) {
+        const currentQuestion = questions[editingIndex];
+        populateFormWithQuestion(currentQuestion);
+    }
+    
+    // Refresh questions table with new language
+    renderQuestionsTable();
 }
 
 // Helper function to load language content when editing
@@ -761,7 +910,47 @@ function updateTranslations() {
 
 // Initialize
 renderDynamicFields(typeSelect.value);
-setLanguage('en_CA'); // This will also call renderQuestionsList()
+setLanguage('en_CA'); // This will also call renderQuestionsTable()
+// Load questions from MongoDB on page load
+loadQuestionsFromDB();
 </script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Authentication and Navigation Scripts -->
+<script src="../js/auth/auth-service.js"></script>
+<script src="../js/auth/auth-ui.js"></script>
+
+<script>
+// Initialize authentication and show admin-only navigation items
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for auth scripts to load, then initialize
+    setTimeout(function() {
+        try {
+            // Check if auth service is available and has init method
+            if (window.authService && typeof window.authService.init === 'function') {
+                window.authService.init();
+                
+                // Show admin-only navigation items if user is admin
+                if (window.authService.isAuthenticated() && window.authService.isAdmin()) {
+                    document.querySelectorAll('.admin-only').forEach(item => {
+                        item.classList.remove('d-none');
+                    });
+                }
+            } else {
+                console.log('Auth service not available - showing admin navigation for development');
+                // Show admin items for development/testing when auth service is not available
+                document.querySelectorAll('.admin-only').forEach(item => {
+                    item.classList.remove('d-none');
+                });
+            }
+        } catch (error) {
+            console.error('Error initializing auth service:', error);
+        }
+    }, 100);
+});
+</script>
+
 </body>
 </html>
