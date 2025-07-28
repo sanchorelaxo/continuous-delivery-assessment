@@ -644,53 +644,6 @@ getWeightText: function(weight) {
         case 3: return uiTranslations.critical || 'Critical';
         default: return uiTranslations.standard || 'Standard';
     }
-},
-
-/**
- * Move to the next question after an answer is selected
- * @param {HTMLElement} currentQuestionCard - The current question card element
- */
-moveToNextQuestion: function(currentQuestionCard) {
-    if (!currentQuestionCard) return;
-    
-    // Find the next question card in the same practice area
-    let nextQuestionCard = currentQuestionCard.nextElementSibling;
-    while (nextQuestionCard && !nextQuestionCard.classList.contains('card')) {
-        nextQuestionCard = nextQuestionCard.nextElementSibling;
-    }
-    
-    if (nextQuestionCard && nextQuestionCard.querySelector('.form-check-input')) {
-        // Found next question in same practice area
-        nextQuestionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-        // Look for the next practice area's first question
-        const currentSection = currentQuestionCard.closest('.practice-area-section');
-        if (currentSection) {
-            let nextSection = currentSection.nextElementSibling;
-            while (nextSection && !nextSection.classList.contains('practice-area-section')) {
-                nextSection = nextSection.nextElementSibling;
-            }
-            
-            if (nextSection) {
-                const firstQuestionInNextSection = nextSection.querySelector('.card');
-                if (firstQuestionInNextSection) {
-                    firstQuestionInNextSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Update the active practice area in the navigation
-                    const sectionId = nextSection.id;
-                    const navLink = document.querySelector(`#practice-areas-nav .nav-link[href="#${sectionId}"]`);
-                    if (navLink) {
-                        // Remove active class from all nav links
-                        document.querySelectorAll('#practice-areas-nav .nav-link').forEach(link => {
-                            link.classList.remove('active');
-                        });
-                        // Add active class to the new nav link
-                        navLink.classList.add('active');
-                    }
-                }
-            }
-        }
-    }
 }
 };
 
