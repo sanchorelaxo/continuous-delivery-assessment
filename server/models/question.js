@@ -107,7 +107,9 @@ async function updateQuestion(db, id, updates) {
     { returnDocument: 'after' }
   );
   
-  return result.value;
+  // In MongoDB driver 6.x with returnDocument: 'after', the document is returned directly
+  // If result is null, the document wasn't found
+  return result || null;
 }
 
 /**
