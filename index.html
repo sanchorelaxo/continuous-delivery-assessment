@@ -414,9 +414,37 @@
          * Move to the next question
          */
         window.moveToNextQuestion = function(currentQuestion) {
+            if (!currentQuestion) return;
+            
             const nextQuestion = currentQuestion.nextElementSibling;
-            if (nextQuestion) {
-                nextQuestion.scrollIntoView({ behavior: 'smooth' });
+            if (nextQuestion && (nextQuestion.classList.contains('question-card') || nextQuestion.classList.contains('card'))) {
+                nextQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // If we're at the last question in this practice area,
+                // find the next practice area's first question
+                const currentPracticeArea = currentQuestion.closest('.practice-area');
+                if (currentPracticeArea) {
+                    const nextPracticeArea = currentPracticeArea.nextElementSibling;
+                    if (nextPracticeArea && nextPracticeArea.classList.contains('practice-area')) {
+                        const firstQuestion = nextPracticeArea.querySelector('.question-card, .card');
+                        if (firstQuestion) {
+                            // Scroll to first question with better positioning to show the heading
+                            firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        } else {
+                            // Fallback: scroll to the practice area itself
+                            nextPracticeArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                        
+                        // Update the active practice area in the navigation
+                        const areaId = nextPracticeArea.id;
+                        const navLinks = document.querySelectorAll('#practice-areas-nav .nav-link');
+                        navLinks.forEach(link => link.classList.remove('active'));
+                        const targetNavLink = document.querySelector(`#practice-areas-nav .nav-link[href="#${areaId}"]`);
+                        if (targetNavLink) {
+                            targetNavLink.classList.add('active');
+                        }
+                    }
+                }
             }
         };
 
@@ -731,9 +759,24 @@
             
             // Si erreurs dans les champs d'info, faire défiler vers le haut
             if (hasInfoErrors) {
-                const infoTitle = document.getElementById('assessment-info-title');
-                if (infoTitle) {
-                    infoTitle.scrollIntoView({ behavior: 'smooth' });
+                // Find the first invalid field
+                const firstInvalidField = authorEmail.classList.contains('is-invalid') ? authorEmail : teamName;
+                
+                // Force scroll to the field's parent card
+                const infoCard = document.querySelector('.card');
+                if (infoCard) {
+                    // Use window.scrollTo for more reliable scrolling
+                    const rect = infoCard.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    window.scrollTo({
+                        top: rect.top + scrollTop - 100, // Offset to show the header
+                        behavior: 'smooth'
+                    });
+                    
+                    // Focus the first invalid field after scrolling completes
+                    setTimeout(() => {
+                        firstInvalidField.focus();
+                    }, 500);
                 }
                 return;
             }
@@ -1599,6 +1642,8 @@ ${recommendations}
          * @param {HTMLElement} currentQuestionCard - The current question card element
          */
         function moveToNextQuestion(currentQuestionCard) {
+            if (!currentQuestionCard) return;
+            
             const nextQuestionCard = currentQuestionCard.nextElementSibling;
             if (nextQuestionCard && nextQuestionCard.classList.contains('question-card')) {
                 nextQuestionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1606,14 +1651,19 @@ ${recommendations}
                 // If we're at the last question in this practice area,
                 // find the next practice area's first question
                 const currentPracticeArea = currentQuestionCard.closest('.practice-area');
-                const nextPracticeArea = currentPracticeArea.nextElementSibling;
-                if (nextPracticeArea) {
-                    const firstQuestion = nextPracticeArea.querySelector('.question-card');
-                    if (firstQuestion) {
-                        firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // Update the active practice area in the navigation
-                        const areaId = nextPracticeArea.id;
-                        document.querySelector(`#practice-areas-nav .nav-link[href="#${areaId}"]`).click();
+                if (currentPracticeArea) {
+                    const nextPracticeArea = currentPracticeArea.nextElementSibling;
+                    if (nextPracticeArea) {
+                        const firstQuestion = nextPracticeArea.querySelector('.question-card');
+                        if (firstQuestion) {
+                            firstQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            // Update the active practice area in the navigation
+                            const areaId = nextPracticeArea.id;
+                            const navLink = document.querySelector(`#practice-areas-nav .nav-link[href="#${areaId}"]`);
+                            if (navLink) {
+                                navLink.click();
+                            }
+                        }
                     }
                 }
             }

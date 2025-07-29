@@ -229,7 +229,7 @@ window.questionLoader = {
             // Create section for practice area
             const section = document.createElement('section');
             section.id = practiceArea;
-            section.className = 'practice-area-section mb-5';
+            section.className = 'practice-area mb-5';
             
             // Add heading
             const heading = document.createElement('h2');
@@ -260,6 +260,24 @@ window.questionLoader = {
         if (window.updateProgress) {
             window.updateProgress();
         }
+        
+        // Reinitialize scrollspy after rendering questions
+        setTimeout(() => {
+            const scrollSpyContent = document.querySelector('.col-md-9');
+            if (scrollSpyContent && window.bootstrap) {
+                // Dispose existing scrollspy instance
+                const existingScrollSpy = bootstrap.ScrollSpy.getInstance(scrollSpyContent);
+                if (existingScrollSpy) {
+                    existingScrollSpy.dispose();
+                }
+                
+                // Create new scrollspy instance
+                new bootstrap.ScrollSpy(scrollSpyContent, {
+                    target: '#practice-areas-nav',
+                    offset: 100
+                });
+            }
+        }, 100);
     },
     
     /**
@@ -595,7 +613,9 @@ createQuestionElement: function(question, practiceArea) {
             
             // Auto-scroll to next question
             setTimeout(() => {
-                this.moveToNextQuestion(e.target.closest('.card'));
+                if (window.moveToNextQuestion) {
+                    window.moveToNextQuestion(e.target.closest('.card'));
+                }
             }, 300); // Small delay to allow the selection to be visually confirmed
         });
         
