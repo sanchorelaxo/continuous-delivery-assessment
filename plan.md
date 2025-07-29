@@ -35,9 +35,9 @@
 - [x] Migrate existing questions into MongoDB
 - [x] Debug and fix frontend issues (progress tracking, Calculate Results button, language toggle, UI translations)
 - [x] Debug question editor UI for admins (correctly saving across languages)
-- [ ] Debug user management UI for admins
+- [x] Debug user management UI for admins
 - [ ] Add group management UI for admins
 - [ ] Add Assessment Analytics UI for admins
 
 ## Current Goal
-- [ ] Debug user management UI for admins
+Add group management UI for admins: allow creating, editing, and deleting groups, as well as managing group memberships.

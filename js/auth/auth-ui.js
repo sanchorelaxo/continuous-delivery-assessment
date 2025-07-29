@@ -788,6 +788,9 @@ window.authUI = (function() {
             user.groups.join(', ') : 
             'None';
           
+          // Ensure we're using the correct ID field (_id for MongoDB)
+          const userId = user._id || user.id || user.userId;
+          
           row.innerHTML = `
             <td>${user.username}</td>
             <td>${user.email}</td>
@@ -796,8 +799,8 @@ window.authUI = (function() {
             <td>${lastLogin}</td>
             <td>
               <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-primary edit-user" data-user-id="${user.userId}">Edit</button>
-                <button type="button" class="btn btn-outline-danger delete-user" data-user-id="${user.userId}">Delete</button>
+                <button type="button" class="btn btn-outline-primary edit-user" data-user-id="${userId}">Edit</button>
+                <button type="button" class="btn btn-outline-danger delete-user" data-user-id="${userId}">Delete</button>
               </div>
             </td>
           `;
@@ -955,9 +958,289 @@ window.authUI = (function() {
    * @param {string} userId - User ID
    */
   function editUser(userId) {
-    // TODO: Implement edit user functionality
-
-    alert('Edit user functionality coming soon!');
+    // Show the edit user modal with the user's data
+    showEditUserModal(userId);
+  }
+  
+  /**
+   * Show edit user modal
+   * @param {string} userId - User ID to edit
+   */
+  async function showEditUserModal(userId) {
+    try {
+      // Fetch the user data first
+      const token = window.authService ? window.authService.getToken() : null;
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      // Loading indicator removed
+      
+      // Fetch user data
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      
+      const userData = await response.json();
+      
+      // Hide loading indicator
+      // Loading indicator removed
+      
+      // Create modal if it doesn't exist
+      let editUserModal = document.getElementById('edit-user-modal');
+      
+      if (!editUserModal) {
+        editUserModal = document.createElement('div');
+        editUserModal.id = 'edit-user-modal';
+        editUserModal.className = 'modal fade';
+        editUserModal.setAttribute('tabindex', '-1');
+        editUserModal.setAttribute('role', 'dialog');
+        editUserModal.setAttribute('aria-labelledby', 'editUserModalLabel');
+        
+        // Use the same structure as the add user modal for consistency
+        editUserModal.innerHTML = `
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="edit-user-form">
+                  <input type="hidden" id="edit-user-id">
+                  <div class="mb-3">
+                    <label for="edit-username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="edit-username" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="edit-email" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit-password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="edit-password" placeholder="Leave blank to keep current password">
+                    <small class="form-text text-muted">Leave blank to keep the current password</small>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit-role" class="form-label">Role</label>
+                    <select class="form-select" id="edit-role" required>
+                      <option value="assessment_user">Assessment User</option>
+                      <option value="assessment_admin">Assessment Admin</option>
+                      <option value="sysAdmin">System Admin</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit-groups" class="form-label">Groups</label>
+                    <select class="form-select" id="edit-groups" multiple>
+                      <!-- Groups will be loaded dynamically -->
+                      <option value="loading" disabled>Loading groups...</option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="update-user-btn">Update User</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(editUserModal);
+        
+        // Add event listener for update button
+        document.getElementById('update-user-btn').addEventListener('click', saveEditedUser);
+      }
+      
+      // Populate form with user data
+      document.getElementById('edit-user-id').value = userId;
+      document.getElementById('edit-username').value = userData.username || '';
+      document.getElementById('edit-email').value = userData.email || '';
+      document.getElementById('edit-password').value = ''; // Clear password field
+      
+      // Set role
+      const roleSelect = document.getElementById('edit-role');
+      if (roleSelect) {
+        for (let i = 0; i < roleSelect.options.length; i++) {
+          if (roleSelect.options[i].value === userData.role) {
+            roleSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      
+      // Show modal
+      const modal = new bootstrap.Modal(editUserModal, {
+        // Add options to improve accessibility
+        focus: true
+      });
+      
+      // Add an event listener to fix accessibility issues with aria-hidden
+      editUserModal.addEventListener('shown.bs.modal', function() {
+        // Remove aria-hidden attribute if it was added by Bootstrap
+        if (editUserModal.getAttribute('aria-hidden') === 'true') {
+          editUserModal.removeAttribute('aria-hidden');
+        }
+        
+        // Ensure focus is properly managed
+        const usernameField = document.getElementById('edit-username');
+        if (usernameField) {
+          usernameField.focus();
+        }
+      });
+      
+      modal.show();
+      
+      // Load groups and set selected groups
+      await loadGroupsForEdit(userData.groups || []);
+      
+    } catch (error) {
+      console.error('Error showing edit user modal:', error);
+      // Loading indicator removed
+      showErrorAlert('Failed to load user data: ' + error.message);
+    }
+  }
+  
+  /**
+   * Load groups for the edit user modal
+   * @param {Array} selectedGroups - Array of group IDs that should be selected
+   */
+  async function loadGroupsForEdit(selectedGroups = []) {
+    try {
+      const token = window.authService ? window.authService.getToken() : null;
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await fetch('/api/groups', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch groups');
+      }
+      
+      const groups = await response.json();
+      const groupsSelect = document.getElementById('edit-groups');
+      
+      // Clear existing options
+      groupsSelect.innerHTML = '';
+      
+      // Add groups to select
+      groups.forEach(group => {
+        const option = document.createElement('option');
+        option.value = group.id;
+        option.textContent = group.name;
+        option.selected = selectedGroups.includes(group.id);
+        groupsSelect.appendChild(option);
+      });
+      
+      // If no groups, show message
+      if (groups.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No groups available';
+        option.disabled = true;
+        groupsSelect.appendChild(option);
+      }
+      
+    } catch (error) {
+      console.error('Error loading groups for edit:', error);
+      const groupsSelect = document.getElementById('edit-groups');
+      groupsSelect.innerHTML = '<option value="" disabled>Failed to load groups</option>';
+    }
+  }
+  
+  /**
+   * Save edited user data
+   */
+  async function saveEditedUser() {
+    try {
+      // Get form data
+      const userId = document.getElementById('edit-user-id').value;
+      const username = document.getElementById('edit-username').value;
+      const email = document.getElementById('edit-email').value;
+      const password = document.getElementById('edit-password').value;
+      const role = document.getElementById('edit-role').value;
+      
+      // Get selected groups
+      const groupsSelect = document.getElementById('edit-groups');
+      const selectedGroups = Array.from(groupsSelect.selectedOptions).map(option => option.value);
+      
+      // Validate form
+      if (!username || !email || !role) {
+        showErrorAlert('Please fill in all required fields');
+        return;
+      }
+      
+      // Show loading indicator
+      // Loading indicator removed
+      
+      // Prepare user data
+      const userData = {
+        username,
+        email,
+        role,
+        groups: selectedGroups
+      };
+      
+      // Only include password if it was changed
+      if (password) {
+        userData.password = password;
+      }
+      
+      // Get token
+      const token = window.authService ? window.authService.getToken() : null;
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      // Send update request
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update user');
+      }
+      
+      // Hide loading indicator
+      // Loading indicator removed
+      
+      // Close modal
+      const editUserModal = document.getElementById('edit-user-modal');
+      const modal = bootstrap.Modal.getInstance(editUserModal);
+      modal.hide();
+      
+      // Show success message
+      showSuccessAlert('User updated successfully');
+      
+      // Reload users table
+      loadUsers();
+      
+    } catch (error) {
+      console.error('Error updating user:', error);
+      // Loading indicator removed
+      showErrorAlert('Failed to update user: ' + error.message);
+    }
   }
   
   /**
@@ -965,9 +1248,202 @@ window.authUI = (function() {
    * @param {string} userId - User ID
    */
   function deleteUser(userId) {
-    // TODO: Implement delete user functionality
-
-    alert('Delete user functionality coming soon!');
+    // Show confirmation dialog
+    showDeleteConfirmationModal(userId);
+  }
+  
+  /**
+   * Show delete confirmation modal
+   * @param {string} userId - User ID to delete
+   */
+  function showDeleteConfirmationModal(userId) {
+    // Create modal if it doesn't exist
+    let deleteConfirmModal = document.getElementById('delete-user-confirm-modal');
+    
+    if (!deleteConfirmModal) {
+      deleteConfirmModal = document.createElement('div');
+      deleteConfirmModal.id = 'delete-user-confirm-modal';
+      deleteConfirmModal.className = 'modal fade';
+      deleteConfirmModal.setAttribute('tabindex', '-1');
+      deleteConfirmModal.setAttribute('role', 'dialog');
+      deleteConfirmModal.setAttribute('aria-labelledby', 'deleteUserConfirmModalLabel');
+      
+      deleteConfirmModal.innerHTML = `
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="deleteUserConfirmModalLabel">Confirm Deletion</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+              <input type="hidden" id="delete-user-id">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete User</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(deleteConfirmModal);
+      
+      // Add event listener for confirm button
+      document.getElementById('confirm-delete-btn').addEventListener('click', confirmDeleteUser);
+    }
+    
+    // Set user ID in hidden field
+    document.getElementById('delete-user-id').value = userId;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(deleteConfirmModal, {
+      // Add options to improve accessibility
+      focus: true
+    });
+    
+    // Add an event listener to fix accessibility issues with aria-hidden
+    deleteConfirmModal.addEventListener('shown.bs.modal', function() {
+      // Remove aria-hidden attribute if it was added by Bootstrap
+      if (deleteConfirmModal.getAttribute('aria-hidden') === 'true') {
+        deleteConfirmModal.removeAttribute('aria-hidden');
+      }
+      
+      // Ensure focus is properly managed
+      const confirmButton = document.getElementById('confirm-delete-btn');
+      if (confirmButton) {
+        confirmButton.focus();
+      }
+    });
+    
+    modal.show();
+  }
+  
+  /**
+   * Confirm and process user deletion
+   */
+  async function confirmDeleteUser() {
+    try {
+      // Get user ID from hidden field
+      const userId = document.getElementById('delete-user-id').value;
+      
+      if (!userId) {
+        throw new Error('User ID is missing');
+      }
+      
+      // Get authentication token
+      const token = window.authService ? window.authService.getToken() : null;
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      // Show loading indicator
+      // Loading indicator removed
+      
+      // Send delete request to API
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete user');
+      }
+      
+      // Hide loading indicator
+      // Loading indicator removed
+      
+      // Close modal
+      const deleteConfirmModal = document.getElementById('delete-user-confirm-modal');
+      const modal = bootstrap.Modal.getInstance(deleteConfirmModal);
+      modal.hide();
+      
+      // Show success message
+      showSuccessAlert('User deleted successfully');
+      
+      // Reload users table
+      loadUsers();
+      
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      // Loading indicator removed
+      showErrorAlert('Failed to delete user: ' + error.message);
+      
+      // Close modal even if there's an error
+      const deleteConfirmModal = document.getElementById('delete-user-confirm-modal');
+      const modal = bootstrap.Modal.getInstance(deleteConfirmModal);
+      if (modal) {
+        modal.hide();
+      }
+    }
+  }
+  
+  // Loading overlay functions removed as they are not needed
+  
+  /**
+   * Show success alert
+   * @param {string} message - Success message
+   */
+  function showSuccessAlert(message) {
+    showAlert(message, 'success');
+  }
+  
+  /**
+   * Show error alert
+   * @param {string} message - Error message
+   */
+  function showErrorAlert(message) {
+    showAlert(message, 'danger');
+  }
+  
+  /**
+   * Show alert with message and type
+   * @param {string} message - Alert message
+   * @param {string} type - Alert type (success, danger, warning, info)
+   */
+  function showAlert(message, type = 'info') {
+    // Create alert container if it doesn't exist
+    let alertContainer = document.getElementById('alert-container');
+    
+    if (!alertContainer) {
+      alertContainer = document.createElement('div');
+      alertContainer.id = 'alert-container';
+      alertContainer.className = 'position-fixed top-0 end-0 p-3';
+      alertContainer.style.zIndex = '9999';
+      document.body.appendChild(alertContainer);
+    }
+    
+    // Create alert
+    const alertId = 'alert-' + Date.now();
+    const alertElement = document.createElement('div');
+    alertElement.id = alertId;
+    alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+    alertElement.role = 'alert';
+    
+    alertElement.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Add alert to container
+    alertContainer.appendChild(alertElement);
+    
+    // Initialize Bootstrap alert
+    const bsAlert = new bootstrap.Alert(alertElement);
+    
+    // Auto-close after 5 seconds
+    setTimeout(() => {
+      bsAlert.close();
+    }, 5000);
+    
+    // Remove from DOM after closed
+    alertElement.addEventListener('closed.bs.alert', function() {
+      this.remove();
+    });
   }
   
   // Public API
