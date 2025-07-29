@@ -31,7 +31,6 @@ window.assessmentHistoryUI = (function() {
       // Hide history by default
       hideHistory();
       
-      console.log('Assessment history UI initialized successfully');
     } catch (error) {
       console.error('Error initializing assessment history UI:', error);
     }
@@ -90,25 +89,8 @@ window.assessmentHistoryUI = (function() {
         </ul>
       </nav>
       
-      <!-- Assessment Comparison Modal -->
-      <div class="modal fade" id="comparison-modal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="comparisonModalLabel">Assessment Comparison</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div id="comparison-content">
-                <!-- Content will be dynamically generated here -->
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Assessment Comparison Modal Container -->
+      <div id="comparison-modal-container"></div>
     `;
     
     // Append to the main container
@@ -130,9 +112,67 @@ window.assessmentHistoryUI = (function() {
       searchBtn.addEventListener('click', searchAssessments);
     }
     
-    const exportBtn = document.getElementById('export-comparison-btn');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', exportComparison);
+    // Create the comparison modal dynamically with proper accessibility attributes
+    createComparisonModal();
+  }
+  
+  /**
+   * Create the comparison modal dynamically with proper accessibility attributes
+   */
+  function createComparisonModal() {
+    const modalContainer = document.getElementById('comparison-modal-container');
+    if (!modalContainer) return;
+    
+    // Clear any existing content
+    modalContainer.innerHTML = '';
+    
+    // Create modal structure with proper accessibility attributes
+    modalContainer.innerHTML = `
+      <div id="comparison-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="comparisonModalLabel">
+        <div class="modal-dialog modal-xl" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="comparisonModalLabel">Assessment Comparison</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div id="comparison-content">
+                <!-- Content will be dynamically generated here -->
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Initialize the modal with Bootstrap
+    const modal = document.getElementById('comparison-modal');
+    if (modal) {
+      // Initialize Bootstrap modal
+      const bsModal = new bootstrap.Modal(modal, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+      });
+      
+      // Store the modal instance for later use
+      window.comparisonBsModal = bsModal;
+      
+      // Add event listeners for accessibility
+      modal.addEventListener('hidden.bs.modal', function() {
+        // Use inert attribute which is better for accessibility
+        this.setAttribute('inert', '');
+        // Remove aria-hidden to prevent accessibility warnings
+        this.removeAttribute('aria-hidden');
+      });
+      
+      // When modal is shown, remove inert attribute
+      modal.addEventListener('show.bs.modal', function() {
+        this.removeAttribute('inert');
+      });
     }
   }
   
@@ -517,7 +557,7 @@ window.assessmentHistoryUI = (function() {
       }
       
       const assessment = result.data;
-      console.log('Viewing assessment:', assessment);
+
       
       // Ensure we have a valid assessment
       if (!assessment) {
@@ -687,9 +727,28 @@ window.assessmentHistoryUI = (function() {
         </div>
       `;
       
+      // Make sure the modal exists
+      if (!document.getElementById('comparison-modal')) {
+        createComparisonModal();
+      }
+      
+      // Get modal element
+      const modalElement = document.getElementById('comparison-modal');
+      
+      // Remove aria-hidden attribute to prevent accessibility warnings
+      modalElement.removeAttribute('aria-hidden');
+      
       // Show modal
-      const modal = new bootstrap.Modal(document.getElementById('comparison-modal'));
+      const modal = new bootstrap.Modal(modalElement);
       modal.show();
+      
+      // Add event listener to remove aria-hidden when modal is hidden
+      modalElement.addEventListener('hidden.bs.modal', function() {
+        // Use inert attribute which is better for accessibility
+        this.setAttribute('inert', '');
+        // Remove aria-hidden to prevent accessibility warnings
+        this.removeAttribute('aria-hidden');
+      }, { once: true });
       
       // Get authentication token
       const token = window.authService ? window.authService.getToken() : null;
@@ -744,7 +803,7 @@ window.assessmentHistoryUI = (function() {
    * @param {Object} data - Server response data containing comparison information
    */
   function renderComparisonFromServerData(data) {
-    console.log('renderComparisonFromServerData called with data:', JSON.stringify(data));
+
     
     // Extract the data structure correctly
     // The server response has a different structure than what our rendering functions expect
@@ -753,32 +812,32 @@ window.assessmentHistoryUI = (function() {
     // Server response structure from /api/assessments/compare endpoint
     comparisonData = data.comparisonData;
     assessmentsData = data.assessments;
-    
-    console.log('Processing server data for comparison:', {
+    // Process comparison data
+    const comparisonInfo = {
       comparisonData: comparisonData,
       assessmentsData: assessmentsData
-    });
+    };
     
     // Ensure assessmentsData has all required fields for CSV export
     if (assessmentsData && assessmentsData.length) {
       assessmentsData.forEach((assessment, index) => {
-        console.log(`Assessment ${index} data:`, assessment);
+        // Process assessment data if needed
       });
     } else {
       console.warn('No assessment data available for comparison');
       assessmentsData = [];
     }
     
-    console.log('Extracted comparisonData:', JSON.stringify(comparisonData));
-    console.log('Extracted assessments:', JSON.stringify(assessmentsData));
+
+
     
     // Check if assessments have the full results object
     assessmentsData.forEach((assessment, index) => {
-      console.log(`Assessment ${index} (${assessment.id}) - Has results object:`, !!assessment.results);
+
       if (assessment.results) {
-        console.log(`Assessment ${index} practice areas:`, Object.keys(assessment.results));
+
       } else {
-        console.log(`Assessment ${index} is missing results object. Full assessment:`, JSON.stringify(assessment));
+
       }
     });
     
@@ -927,9 +986,9 @@ window.assessmentHistoryUI = (function() {
    * @param {Array} assessments - Assessment metadata
    */
   function renderComparisonTable(comparisonData, assessments) {
-    console.log('renderComparisonTable called with:');
-    console.log('comparisonData:', comparisonData);
-    console.log('assessments:', assessments);
+
+
+
     
     // Create table element
     const tableContainer = document.querySelector('#comparison-content .table-responsive');
@@ -987,10 +1046,10 @@ window.assessmentHistoryUI = (function() {
     overallRow.innerHTML = '<td><strong>Overall Maturity</strong></td>';
     
     // Recalculate overall maturity for each assessment using the same logic as in scoring.js
-    console.log('Processing overall maturity for assessments:', assessments);
+
     assessments.forEach((assessment, index) => {
       // Get the assessment data
-      console.log(`Assessment ${index}:`, JSON.stringify(assessment));
+
       
       // Make sure we have a valid overall maturity value
       let overallMaturity = 0;
@@ -1014,15 +1073,15 @@ window.assessmentHistoryUI = (function() {
         // This matches the logic in scoring.js: results.overall = { maturityLevel: Math.min(...maturityLevels) }
         if (maturityLevels.length > 0) {
           overallMaturity = Math.min(...maturityLevels);
-          console.log(`Calculated overall maturity (minimum of all areas): ${overallMaturity}`);
+
         } else {
-          console.log('No valid maturity levels found in assessment results');
+
         }
       } else {
-        console.log('No results object found in assessment');
+
       }
       
-      console.log(`Final overall maturity for assessment ${index}:`, overallMaturity);
+
       
       overallRow.innerHTML += `
         <td>
@@ -1120,7 +1179,7 @@ window.assessmentHistoryUI = (function() {
    * @param {Array} assessments - Assessment metadata
    */
   function exportComparison(comparisonData, assessments) {
-    console.log('Exporting comparison data to CSV:', comparisonData, assessments);
+
     const { labels, datasets } = comparisonData;
     
     // Create CSV header row
@@ -1143,9 +1202,7 @@ window.assessmentHistoryUI = (function() {
     overallRow += assessments.map((assessment) => {
       // Get overall maturity from assessment or calculate it
       let overallMaturity = 0;
-      
-      console.log('CSV export - assessment data:', JSON.stringify(assessment));
-      
+            
       // Use the same logic as in scoring.js to calculate the overall maturity
       if (assessment.results) {
         const practiceAreas = [
@@ -1165,15 +1222,14 @@ window.assessmentHistoryUI = (function() {
         // This matches the logic in scoring.js: results.overall = { maturityLevel: Math.min(...maturityLevels) }
         if (maturityLevels.length > 0) {
           overallMaturity = Math.min(...maturityLevels);
-          console.log('CSV export - calculated overall maturity (minimum of all areas):', overallMaturity);
+
         } else {
-          console.log('CSV export - no valid maturity levels found in assessment results');
+
         }
       } else {
-        console.log('CSV export - no results object found in assessment');
+
       }
       
-      console.log('CSV export - final overall maturity:', overallMaturity);
       return overallMaturity.toFixed(2);
     }).join(',');
     csvContent += overallRow + '\n\n';
@@ -1181,8 +1237,7 @@ window.assessmentHistoryUI = (function() {
     // Add assessment metadata
     csvContent += '\n"Assessment Details:"\n';
     
-    // Log the full assessments data to debug
-    console.log('CSV export - full assessments data:', JSON.stringify(assessments));
+    // Process assessments data
     
     assessments.forEach((assessment, index) => {
       const dataset = datasets[index];
@@ -1196,7 +1251,6 @@ window.assessmentHistoryUI = (function() {
           const date = new Date(timestamp);
           if (!isNaN(date.getTime())) { // Check if date is valid
             dateStr = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-            console.log(`CSV export - formatted date for assessment ${index}:`, dateStr);
           }
         }
       } catch (e) {
@@ -1207,13 +1261,12 @@ window.assessmentHistoryUI = (function() {
       // These fields were explicitly added in the server response
       const title = assessment.name || 'Untitled';
       const username = assessment.username || 'Anonymous';
-      
-      console.log(`CSV export - assessment ${index} details:`, {
+      const assessmentDetails = {
         label: dataset.label,
         date: dateStr,
         title,
         username
-      });
+      };
       
       csvContent += `"${dataset.label}","${dateStr}","${title}","${username}"\n`;
     });

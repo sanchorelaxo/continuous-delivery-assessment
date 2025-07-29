@@ -147,6 +147,14 @@ This script will create the following test users:
 
 ## Recent Updates
 
+### UI and Navigation Improvements
+- Improved autoscroll functionality between practice areas for seamless navigation
+- Fixed validation scrolling to properly focus on invalid fields when submitting
+- Enhanced navigation sidebar highlighting with manual class toggling
+- Added ScrollSpy reinitialization after dynamic question rendering
+- Removed temporary debug logging for cleaner production code
+- Fixed syntax errors and improved code quality throughout the codebase
+
 ### Admin Dashboard and Navigation Improvements
 - Added comprehensive admin dashboard with user management capabilities
 - Fixed navigation links to work consistently across all UI contexts

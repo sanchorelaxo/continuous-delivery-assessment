@@ -198,7 +198,7 @@ window.assessmentHistory = {
      * @returns {Promise<Object>} - Promise resolving to the comparison data
      */
     compareAssessments: async function(assessmentIds) {
-        console.log('compareAssessments called with IDs:', assessmentIds);
+        // Assessment comparison started
         if (!assessmentIds || !Array.isArray(assessmentIds) || assessmentIds.length === 0) {
             console.error('No assessment IDs provided for comparison');
             return {
@@ -214,7 +214,7 @@ window.assessmentHistory = {
             );
             
             const assessmentResults = await Promise.all(assessmentPromises);
-            console.log('Assessment results fetched:', assessmentResults);
+            // Assessment results fetched
             
             // Check if all assessments were fetched successfully
             const failedAssessments = assessmentResults.filter(result => !result.success);
@@ -229,11 +229,11 @@ window.assessmentHistory = {
             
             // Extract assessment data
             const assessments = assessmentResults.map(result => result.data);
-            console.log('Extracted assessment data:', assessments);
+            // Assessment data extracted
             
             // Generate comparison data
             const comparisonData = this.generateComparisonData(assessments);
-            console.log('Generated comparison data:', comparisonData);
+            // Comparison data generated
             
             return {
                 success: true,
@@ -256,7 +256,7 @@ window.assessmentHistory = {
      * @private
      */
     generateComparisonData(assessments) {
-      console.log('Generating comparison data from assessments:', assessments);
+      // Generating comparison data
       
       // Define practice areas to ensure consistency
       const practiceAreas = [
@@ -309,7 +309,7 @@ window.assessmentHistory = {
         // This matches the logic in scoring.js: results.overall = { maturityLevel: Math.min(...maturityLevels) }
         if (maturityLevels.length > 0) {
           overallMaturity = Math.min(...maturityLevels);
-          console.log(`Calculated overall maturity (minimum of all areas): ${overallMaturity}`);
+          // Overall maturity calculated
         }
         
         // Set the overall maturity in the results object
@@ -318,13 +318,13 @@ window.assessmentHistory = {
         } else {
           processedAssessment.results.overall.maturityLevel = overallMaturity;
         }
-        console.log(`Final overall maturity: ${overallMaturity}`);
+        // Final overall maturity calculated
         
         
         // Add overallMaturity property for easier access
         processedAssessment.overallMaturity = processedAssessment.results.overall.maturityLevel;
         
-        console.log(`Processed assessment ${processedAssessment._id || 'unknown'} with overall maturity:`, processedAssessment.overallMaturity);
+        // Assessment processed
         
         // Force the overallMaturity to be a number
         if (typeof processedAssessment.overallMaturity !== 'number') {
@@ -334,7 +334,7 @@ window.assessmentHistory = {
         return processedAssessment;
       });
       
-      console.log('Processed assessments before creating comparison data:', JSON.stringify(processedAssessments));
+      // Assessments processed for comparison
       
       // Format practice area labels for display
       const formattedLabels = practiceAreas.map(area => {
@@ -344,13 +344,13 @@ window.assessmentHistory = {
       // Create comparison data structure with metadata and chart data
       const comparisonData = {
         assessments: processedAssessments.map(assessment => {
-          console.log(`Processing assessment ${assessment._id || assessment.id} for comparison data`);
-          console.log(`Results object exists: ${!!assessment.results}`);
+          // Processing assessment for comparison
+
           if (assessment.results) {
-            console.log(`Results keys: ${Object.keys(assessment.results)}`);
-            console.log(`Overall maturity in results: ${assessment.results.overall?.maturityLevel}`);
+
+
           }
-          console.log(`Direct overallMaturity property: ${assessment.overallMaturity}`);
+
           
           // Include the full results object in the comparison data
           return {
@@ -376,12 +376,12 @@ window.assessmentHistory = {
       
       // Log the overall maturity values and results for debugging
       comparisonData.assessments.forEach((assessment, index) => {
-        console.log(`Assessment ${index} in comparisonData:`);
-        console.log(`- ID: ${assessment.id}`);
-        console.log(`- Overall maturity: ${assessment.overallMaturity}`);
-        console.log(`- Has results object: ${!!assessment.results}`);
+
+
+
+
         if (assessment.results) {
-          console.log(`- Results keys: ${Object.keys(assessment.results)}`);
+
         }
       });
         
@@ -408,8 +408,8 @@ window.assessmentHistory = {
         });
         
         // Add debug logs to see what we're returning
-        console.log('Final chart data:', JSON.stringify(comparisonData.chartData, null, 2));
-        console.log('Final assessments data:', JSON.stringify(comparisonData.assessments, null, 2));
+        // Chart data prepared
+        // Assessment data prepared
         
         // Return both the comparison data and the assessments
         return {
@@ -505,7 +505,7 @@ window.dbIntegration.checkStatus = async function(forceCheck = false) {
             window.dbIntegration.status.connected = data.connections && data.connections.mongodb === true;
             window.dbIntegration.status.lastChecked = now;
             
-            console.log(`MongoDB integration is ${window.dbIntegration.status.enabled ? 'enabled' : 'disabled'} and ${window.dbIntegration.status.connected ? 'connected' : 'not connected'}`);
+            // MongoDB integration status checked
         } else {
             console.warn('Invalid health check response, keeping current status');
         }
@@ -607,7 +607,7 @@ window.dbIntegration.saveToMongoDB = async function(responses, results) {
         }
         
         const data = await response.json();
-        console.log('Assessment saved to MongoDB:', data);
+        // Assessment saved to MongoDB
         return { 
             success: true, 
             data: data 
@@ -672,11 +672,11 @@ window.dbIntegration.getAssessmentById = async function(id) {
         }
         
         const data = await response.json();
-        console.log(`Assessment ${id} data:`, JSON.stringify(data, null, 2));
+        // Assessment data retrieved
         
         // Log the structure of the results object
         if (data && data.results) {
-            console.log(`Assessment ${id} results structure:`, Object.keys(data.results));
+
             
             // Check for practice areas
             const practiceAreas = [
@@ -685,20 +685,20 @@ window.dbIntegration.getAssessmentById = async function(id) {
             ];
             
             practiceAreas.forEach(area => {
-                console.log(`Assessment ${id} has ${area}:`, !!data.results[area]);
+
                 if (data.results[area]) {
-                    console.log(`${area} maturityLevel:`, data.results[area].maturityLevel);
+
                 }
             });
             
             // Check for overall maturity
             if (data.results.overall) {
-                console.log(`Assessment ${id} overall maturity:`, data.results.overall.maturityLevel);
+
             } else {
-                console.log(`Assessment ${id} has no overall maturity property`);
+
             }
         } else {
-            console.log(`Assessment ${id} has no results property`);
+
         }
         
         // Extract the actual assessment data
@@ -725,7 +725,7 @@ window.dbIntegration.getAssessmentById = async function(id) {
             metadata: assessmentData.metadata || {}
         };
         
-        console.log('Standardized assessment:', standardizedAssessment);
+        // Assessment standardized
         
         return { 
             success: true, 
@@ -799,7 +799,6 @@ window.dbIntegration.getAllAssessments = async function(page = 1, limit = 10, us
         }
         
         const data = await response.json();
-        console.log('Assessments fetched:', data);
         return data;
     } catch (error) {
         console.error('Error retrieving assessments:', error);

@@ -17,7 +17,7 @@ window.authUI = (function() {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
     }
-    console.log('Showing assessment form');
+
     
     // Hide admin dashboard if it exists
     const adminDashboardContainer = document.getElementById('admin-dashboard-container');
@@ -461,7 +461,7 @@ window.authUI = (function() {
   function showProfile(event) {
     event.preventDefault();
     // TODO: Implement profile view
-    console.log('Show profile');
+
   }
   
   /**
@@ -471,7 +471,7 @@ window.authUI = (function() {
   function showAssessments(event) {
     event.preventDefault();
     // TODO: Implement assessments view
-    console.log('Show assessments');
+
   }
   
   /**
@@ -483,7 +483,7 @@ window.authUI = (function() {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
     }
-    console.log('Showing admin dashboard');
+
     
     // Hide other containers
     document.getElementById('assessment-form').style.display = 'none';
@@ -567,7 +567,7 @@ window.authUI = (function() {
       });
     }
     
-    console.log('Admin dashboard displayed');
+
   }
   
   /**
@@ -576,7 +576,7 @@ window.authUI = (function() {
    */
   function showManageUsers(event) {
     event.preventDefault();
-    console.log('Show user management');
+
     
     // Get the admin dashboard container
     const adminDashboardContainer = document.getElementById('admin-dashboard-container');
@@ -658,7 +658,7 @@ window.authUI = (function() {
   function showManageQuestions(event) {
     event.preventDefault();
     // TODO: Implement question management
-    console.log('Show question management');
+
   }
   
   /**
@@ -956,7 +956,7 @@ window.authUI = (function() {
    */
   function editUser(userId) {
     // TODO: Implement edit user functionality
-    console.log(`Edit user: ${userId}`);
+
     alert('Edit user functionality coming soon!');
   }
   
@@ -966,7 +966,7 @@ window.authUI = (function() {
    */
   function deleteUser(userId) {
     // TODO: Implement delete user functionality
-    console.log(`Delete user: ${userId}`);
+
     alert('Delete user functionality coming soon!');
   }
   
