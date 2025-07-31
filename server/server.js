@@ -15,6 +15,7 @@ const mongoConfig = require('./config/mongodb');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const questionRoutes = require('./routes/questions');
+const groupRoutes = require('./routes/groups');
 
 // Import auth middleware
 const { authenticateToken, optionalAuth } = require('./middleware/auth');
@@ -224,12 +225,23 @@ app.post('/api/save-assessment', optionalAuth, async (req, res) => {
       groupIds: []
     };
     
-    // If user is authenticated, override with user information
+    // If user is authenticated, override with user information and get their groups
     if (req.user) {
       assessmentData.userId = req.user.userId;
       assessmentData.username = req.user.username;
       assessmentData.userRole = req.user.role;
-      assessmentData.groupIds = req.user.groups || [];
+      
+      // Get user's groups from the groups collection
+      try {
+        const groupsCollection = db.collection('groups');
+        const userGroups = await groupsCollection.find({ 
+          members: { $in: [req.user.userId] } 
+        }).toArray();
+        assessmentData.groupIds = userGroups.map(group => group._id.toString());
+      } catch (error) {
+        console.warn('Error fetching user groups for assessment:', error);
+        assessmentData.groupIds = [];
+      }
     } else if (req.body.userId) {
       // For backward compatibility
       assessmentData.userId = req.body.userId;
@@ -238,10 +250,28 @@ app.post('/api/save-assessment', optionalAuth, async (req, res) => {
     
     const result = await collection.insertOne(assessmentData);
     
+    // Add the assessment to the user's groups
+    if (assessmentData.groupIds && assessmentData.groupIds.length > 0) {
+      try {
+        const groupsCollection = db.collection('groups');
+        await groupsCollection.updateMany(
+          { _id: { $in: assessmentData.groupIds.map(id => new ObjectId(id)) } },
+          { 
+            $addToSet: { assessments: result.insertedId.toString() },
+            $set: { updatedAt: new Date() }
+          }
+        );
+      } catch (error) {
+        console.warn('Error adding assessment to groups:', error);
+        // Don't fail the assessment creation if group update fails
+      }
+    }
+    
     res.json({ 
       success: true, 
       id: result.insertedId,
-      isAuthenticated: !!req.user
+      isAuthenticated: !!req.user,
+      assignedToGroups: assessmentData.groupIds.length
     });
   } catch (error) {
     console.error('Error saving assessment:', error);
@@ -790,5 +820,6 @@ app.post('/api/assessments/compare', optionalAuth, async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/questions', questionRoutes);
+app.use('/api/groups', groupRoutes);
 
 startServer().catch(console.error);

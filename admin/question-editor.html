@@ -106,35 +106,63 @@
         #sidebarQuestionsTable .table-active .text-danger {
             color: #ffcccc !important;
         }
+        
+        /* Ensure admin dashboard doesn't interfere with question editor */
+        #admin-dashboard-container {
+            display: none !important;
+        }
+        
+        #assessment-history-container {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="../index.html">CD Assessment</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
+            <div id="navbarNav" class="d-flex flex-nowrap">
+                <ul class="navbar-nav d-flex flex-row flex-nowrap">
+                    <li class="nav-item me-2">
                         <a class="nav-link" href="../index.html" id="nav-assessment">Assessment</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item me-2">
                         <a class="nav-link" href="../index.html#history" id="nav-history">History</a>
                     </li>
-                    <li class="nav-item admin-only d-none">
+                    <li class="nav-item sysadmin-only d-none me-2">
                         <a class="nav-link" href="../index.html#admin" id="nav-admin">Admin</a>
                     </li>
-                    <li class="nav-item admin-only d-none">
-                        <a class="nav-link active" href="question-editor.html" id="nav-question-editor">Question Editor</a>
+                    <li class="nav-item admin-only me-2">
+                        <a class="nav-link active" href="#" id="nav-question-editor">Question Editor</a>
                     </li>
                 </ul>
                 <!-- Auth dropdown will be inserted here by auth-ui.js -->
             </div>
         </div>
     </nav>
+    
+    <style>
+        /* Responsive font sizing for navbar */
+        @media (max-width: 768px) {
+            .navbar .nav-link {
+                font-size: 0.85rem;
+                padding: 0.25rem 0.5rem;
+            }
+            .navbar .navbar-brand {
+                font-size: 1rem;
+            }
+            #username-display {
+                max-width: 80px !important;
+            }
+        }
+    </style>
+
+<!-- Admin Dashboard Container -->
+<div id="admin-dashboard-container" class="container-fluid mt-3 d-none"></div>
+
+<!-- Assessment History Container -->
+<div id="assessment-history-container" class="container-fluid mt-3 d-none"></div>
 
 <div class="container-fluid question-editor-container">
     <div class="row">
@@ -1708,11 +1736,28 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.authService && typeof window.authService.init === 'function') {
                 window.authService.init();
                 
+                // Initialize auth UI (for dropdown event listeners)
+                if (window.authUI && typeof window.authUI.init === 'function') {
+                    window.authUI.init();
+                }
+                
                 // Show admin-only navigation items if user is admin
                 if (window.authService.isAuthenticated() && window.authService.isAdmin()) {
                     document.querySelectorAll('.admin-only').forEach(item => {
                         item.classList.remove('d-none');
                     });
+                }
+                
+                // Ensure admin dashboard containers stay hidden on question editor page
+                const adminDashboard = document.getElementById('admin-dashboard-container');
+                const assessmentHistory = document.getElementById('assessment-history-container');
+                if (adminDashboard) {
+                    adminDashboard.style.display = 'none';
+                    adminDashboard.classList.add('d-none');
+                }
+                if (assessmentHistory) {
+                    assessmentHistory.style.display = 'none';
+                    assessmentHistory.classList.add('d-none');
                 }
             } else {
                 console.log('Auth service not available - showing admin navigation for development');
@@ -1720,10 +1765,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.admin-only').forEach(item => {
                     item.classList.remove('d-none');
                 });
+                
+                // Ensure admin dashboard containers stay hidden on question editor page
+                const adminDashboard = document.getElementById('admin-dashboard-container');
+                const assessmentHistory = document.getElementById('assessment-history-container');
+                if (adminDashboard) {
+                    adminDashboard.style.display = 'none';
+                    adminDashboard.classList.add('d-none');
+                }
+                if (assessmentHistory) {
+                    assessmentHistory.style.display = 'none';
+                    assessmentHistory.classList.add('d-none');
+                }
             }
         } catch (error) {
             console.error('Error initializing auth service:', error);
         }
+        
+        // Override navigation event handlers to redirect to main page
+        // This prevents errors when clicking nav links that expect main page DOM elements
+        setTimeout(function() {
+            const navAssessment = document.getElementById('nav-assessment');
+            if (navAssessment) {
+                navAssessment.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = '../index.html';
+                });
+            }
+            
+            const navHistory = document.getElementById('nav-history');
+            if (navHistory) {
+                navHistory.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = '../index.html#history';
+                });
+            }
+            
+            const navAdmin = document.getElementById('nav-admin');
+            if (navAdmin) {
+                navAdmin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = '../index.html#admin';
+                });
+            }
+        }, 200); // Run after auth UI initialization
     }, 100);
 });
 </script>

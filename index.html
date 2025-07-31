@@ -21,24 +21,21 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="#">CD Assessment</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
+            <div id="navbarNav" class="d-flex flex-nowrap">
+                <ul class="navbar-nav d-flex flex-row flex-nowrap">
+                    <li class="nav-item me-2">
                         <a class="nav-link active" href="#" id="nav-assessment">Assessment</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item me-2">
                         <a class="nav-link" href="#" id="nav-history">History</a>
                     </li>
-                    <li class="nav-item admin-only d-none">
+                    <li class="nav-item sysadmin-only d-none me-2">
                         <a class="nav-link" href="#" id="nav-admin">Admin</a>
                     </li>
-                    <li class="nav-item admin-only d-none">
+                    <li class="nav-item admin-only d-none me-2">
                         <a class="nav-link" href="admin/question-editor.html" id="nav-question-editor">Question Editor</a>
                     </li>
                 </ul>
@@ -46,6 +43,22 @@
             </div>
         </div>
     </nav>
+    
+    <style>
+        /* Responsive font sizing for navbar */
+        @media (max-width: 768px) {
+            .navbar .nav-link {
+                font-size: 0.85rem;
+                padding: 0.25rem 0.5rem;
+            }
+            .navbar .navbar-brand {
+                font-size: 1rem;
+            }
+            #username-display {
+                max-width: 80px !important;
+            }
+        }
+    </style>
     
     <div class="header text-center">
         <div class="container">
@@ -649,7 +662,154 @@
             if (document.getElementById('results-container').style.display === 'block' && window.currentResults) {
                 displayResults(window.currentResults, window.currentChartData);
             }
+            
+            // Update authentication UI translations
+            updateAuthUITranslations(ui);
         };
+        
+        // Function to update authentication UI translations
+        function updateAuthUITranslations(ui) {
+            // Helper function to find elements by text content
+            function findElementsByText(selector, text) {
+                return Array.from(document.querySelectorAll(selector)).filter(el => 
+                    el.textContent.trim().includes(text)
+                );
+            }
+            
+            // Update navigation links
+            const loginLink = document.querySelector('a[onclick*="showLogin"]');
+            if (loginLink) loginLink.textContent = ui.login;
+            
+            const registerLink = document.querySelector('a[onclick*="showRegister"]');
+            if (registerLink) registerLink.textContent = ui.register;
+            
+            const logoutLink = document.querySelector('a[onclick*="logout"]');
+            if (logoutLink) logoutLink.textContent = ui.logout;
+            
+            const adminDashboardLink = document.querySelector('a[onclick*="showAdminDashboard"]');
+            if (adminDashboardLink) adminDashboardLink.textContent = ui.adminDashboard;
+            
+            const assessmentHistoryLink = document.querySelector('a[onclick*="showHistory"]');
+            if (assessmentHistoryLink) assessmentHistoryLink.textContent = ui.assessmentHistory;
+            
+            // Update modal titles and labels
+            const loginModalTitle = document.querySelector('#login-modal .modal-title');
+            if (loginModalTitle) loginModalTitle.textContent = ui.login;
+            
+            const registerModalTitle = document.querySelector('#register-modal .modal-title');
+            if (registerModalTitle) registerModalTitle.textContent = ui.register;
+            
+            // Update form labels
+            const usernameLabels = document.querySelectorAll('label[for*="username"]');
+            usernameLabels.forEach(label => label.textContent = ui.username);
+            
+            const emailLabels = document.querySelectorAll('label[for*="email"]');
+            emailLabels.forEach(label => label.textContent = ui.email);
+            
+            const passwordLabels = document.querySelectorAll('label[for*="password"]');
+            passwordLabels.forEach(label => {
+                if (label.getAttribute('for').includes('confirm')) {
+                    label.textContent = ui.confirmPassword;
+                } else {
+                    label.textContent = ui.password;
+                }
+            });
+            
+            const roleLabels = document.querySelectorAll('label[for*="role"]');
+            roleLabels.forEach(label => label.textContent = ui.role);
+            
+            // Update button texts
+            const loginButtons = document.querySelectorAll('button[onclick*="login"], #login-btn');
+            loginButtons.forEach(btn => btn.textContent = ui.loginButton);
+            
+            const registerButtons = document.querySelectorAll('button[onclick*="register"], #register-btn');
+            registerButtons.forEach(btn => btn.textContent = ui.registerButton);
+            
+            // Update admin dashboard elements using text search
+            const userManagementTitles = findElementsByText('h2, h3', 'User Management');
+            userManagementTitles.forEach(title => title.textContent = ui.userManagement);
+            
+            const groupManagementTitles = findElementsByText('h2, h3', 'Group Management');
+            groupManagementTitles.forEach(title => title.textContent = ui.groupManagement);
+            
+            // Update table headers using text search
+            const usernameHeaders = findElementsByText('th', 'Username');
+            usernameHeaders.forEach(th => th.textContent = ui.username);
+            
+            const emailHeaders = findElementsByText('th', 'Email');
+            emailHeaders.forEach(th => th.textContent = ui.email);
+            
+            const roleHeaders = findElementsByText('th', 'Role');
+            roleHeaders.forEach(th => th.textContent = ui.role);
+            
+            const actionsHeaders = findElementsByText('th', 'Actions');
+            actionsHeaders.forEach(th => th.textContent = ui.actions);
+            
+            const membersHeaders = findElementsByText('th', 'Members');
+            membersHeaders.forEach(th => th.textContent = ui.members);
+            
+            const assessmentsHeaders = findElementsByText('th', 'Assessments');
+            assessmentsHeaders.forEach(th => th.textContent = ui.assessments);
+            
+            // Update action buttons using text search
+            const addUserButtons = findElementsByText('button', 'Add User');
+            addUserButtons.forEach(btn => btn.textContent = ui.addUser);
+            
+            const addGroupButtons = findElementsByText('button', 'Add Group');
+            addGroupButtons.forEach(btn => btn.textContent = ui.addGroup);
+            
+            const editButtons = findElementsByText('button, .btn', 'Edit');
+            editButtons.forEach(btn => btn.textContent = ui.edit);
+            
+            const deleteButtons = findElementsByText('button, .btn', 'Delete');
+            deleteButtons.forEach(btn => btn.textContent = ui.delete);
+            
+            const saveButtons = findElementsByText('button, .btn', 'Save');
+            saveButtons.forEach(btn => btn.textContent = ui.save);
+            
+            const cancelButtons = findElementsByText('button, .btn', 'Cancel');
+            cancelButtons.forEach(btn => btn.textContent = ui.cancel);
+            
+            // Update modal form labels
+            const groupNameLabels = document.querySelectorAll('label[for*="group-name"]');
+            groupNameLabels.forEach(label => label.textContent = ui.groupName);
+            
+            const groupDescriptionLabels = document.querySelectorAll('label[for*="group-description"]');
+            groupDescriptionLabels.forEach(label => label.textContent = ui.groupDescription);
+            
+            // Update placeholders
+            const usernameInputs = document.querySelectorAll('input[name*="username"], input[id*="username"]');
+            usernameInputs.forEach(input => input.placeholder = ui.username);
+            
+            const emailInputs = document.querySelectorAll('input[type="email"], input[name*="email"], input[id*="email"]');
+            emailInputs.forEach(input => input.placeholder = ui.email);
+            
+            const passwordInputs = document.querySelectorAll('input[type="password"]');
+            passwordInputs.forEach(input => {
+                if (input.name && input.name.includes('confirm')) {
+                    input.placeholder = ui.confirmPassword;
+                } else {
+                    input.placeholder = ui.password;
+                }
+            });
+            
+            // Update role select options
+            const roleSelects = document.querySelectorAll('select[name*="role"], select[id*="role"]');
+            roleSelects.forEach(select => {
+                const options = select.querySelectorAll('option');
+                options.forEach(option => {
+                    if (option.value === 'sysAdmin') option.textContent = ui.sysAdmin;
+                    else if (option.value === 'assessment_admin') option.textContent = ui.assessmentAdmin;
+                    else if (option.value === 'assessment_user') option.textContent = ui.assessmentUser;
+                    else if (option.value === '' && option.textContent.includes('Select')) option.textContent = ui.selectRole;
+                });
+            });
+            
+            // Trigger a custom event to notify auth UI components of language change
+            document.dispatchEvent(new CustomEvent('authUILanguageChanged', {
+                detail: { translations: ui, language: window.currentLang }
+            }));
+        }
         
         // Initialize when document is ready
         document.addEventListener('DOMContentLoaded', function() {
@@ -658,6 +818,32 @@
             
             // Initialize assessment history UI
             window.assessmentHistoryUI.init();
+            
+            // Handle URL hash for navigation from other pages
+            setTimeout(function() {
+                const hash = window.location.hash;
+                
+                if (hash === '#admin') {
+                    // Check if user is authenticated and has sysAdmin privileges
+                    if (window.authService && window.authService.isAuthenticated() && window.authService.hasRole(['sysAdmin'])) {
+                        // Simulate clicking the nav-admin button
+                        const navAdmin = document.getElementById('nav-admin');
+                        if (navAdmin) {
+                            navAdmin.click();
+                        }
+                    }
+                } else if (hash === '#history' && window.assessmentHistoryUI && typeof window.assessmentHistoryUI.showHistory === 'function') {
+                    // Check if user is authenticated
+                    if (window.authService && window.authService.isAuthenticated()) {
+                        window.assessmentHistoryUI.showHistory();
+                    }
+                }
+                
+                // Clear the hash after handling it
+                if (hash === '#admin' || hash === '#history') {
+                    history.replaceState(null, null, window.location.pathname);
+                }
+            }, 300); // Wait for auth UI to fully initialize
             
             // Auto-fill email field if user is logged in
             updateEmailFieldFromAuth();

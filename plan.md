@@ -36,8 +36,16 @@
 - [x] Debug and fix frontend issues (progress tracking, Calculate Results button, language toggle, UI translations)
 - [x] Debug question editor UI for admins (correctly saving across languages)
 - [x] Debug user management UI for admins
-- [ ] Add group management UI for admins
+- [x] Add group management UI for admins (basic CRUD operations implemented)
+- [x] Implement assessment management for groups (assign/remove assessments)
+- [x] Retroactively assign existing assessments to default group
+- [x] Implement group-based assessment access control
+- [x] Complete group management features (member management, edit/delete groups)
+- [x] Fix modal accessibility issues and backdrop problems
+- [x] Fix language toggle for all authentication UI elements
+- [x] Add comprehensive translations for authentication system
+- [ ] Fix language toggle for admin dashboard UI elements, modals, dashboard, tables, cards, buttons, etc.
 - [ ] Add Assessment Analytics UI for admins
 
 ## Current Goal
-Add group management UI for admins: allow creating, editing, and deleting groups, as well as managing group memberships.
+Fix language toggle for admin dashboard UI elements, modals, dashboard, tables, cards, buttons, etc.

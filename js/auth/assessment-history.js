@@ -31,6 +31,13 @@ window.assessmentHistoryUI = (function() {
       // Hide history by default
       hideHistory();
       
+      // Listen for language change events
+      document.addEventListener('authUILanguageChanged', function(event) {
+        const { translations, language } = event.detail;
+        // Call the function within this module
+        updateHistoryUILabels(translations);
+      });
+      
     } catch (error) {
       console.error('Error initializing assessment history UI:', error);
     }
@@ -735,20 +742,34 @@ window.assessmentHistoryUI = (function() {
       // Get modal element
       const modalElement = document.getElementById('comparison-modal');
       
+      // Add event listeners to fix accessibility issues with focus management
+      modalElement.addEventListener('hide.bs.modal', function() {
+        // Remove focus from the active element to prevent aria-hidden warnings
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
+      });
+      
+      // Clean up modal and backdrop when hidden
+      modalElement.addEventListener('hidden.bs.modal', function() {
+        // Remove any lingering backdrops
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        
+        // Delay modal removal to let Bootstrap finish its cleanup
+        setTimeout(() => {
+          if (modalElement && modalElement.parentNode) {
+            modalElement.remove();
+          }
+        }, 100);
+      }, { once: true });
+      
       // Remove aria-hidden attribute to prevent accessibility warnings
       modalElement.removeAttribute('aria-hidden');
       
       // Show modal
       const modal = new bootstrap.Modal(modalElement);
       modal.show();
-      
-      // Add event listener to remove aria-hidden when modal is hidden
-      modalElement.addEventListener('hidden.bs.modal', function() {
-        // Use inert attribute which is better for accessibility
-        this.setAttribute('inert', '');
-        // Remove aria-hidden to prevent accessibility warnings
-        this.removeAttribute('aria-hidden');
-      }, { once: true });
       
       // Get authentication token
       const token = window.authService ? window.authService.getToken() : null;
@@ -1310,11 +1331,58 @@ window.assessmentHistoryUI = (function() {
     return 'bg-success';
   }
   
+  /**
+   * Update assessment history UI labels for language changes
+   * @param {Object} translations - Translation object
+   */
+  function updateHistoryUILabels(translations) {
+    try {
+      // Update main title
+      const historyTitle = document.querySelector('#assessment-history-container h2');
+      if (historyTitle) {
+        historyTitle.textContent = translations.assessmentHistory;
+      }
+      
+      // Update table headers
+      const tableHeaders = document.querySelectorAll('#assessment-history-container th');
+      tableHeaders.forEach(th => {
+        const text = th.textContent.trim();
+        if (text === 'Date' || text === 'Date') th.textContent = translations.createdAt;
+        else if (text === 'Team' || text === 'Équipe') th.textContent = translations.teamName;
+        else if (text === 'System' || text === 'Système') th.textContent = translations.systemName;
+        else if (text === 'Overall Level' || text === 'Niveau global') th.textContent = translations.overallMaturity;
+        else if (text === 'Actions') th.textContent = translations.actions;
+      });
+      
+      // Update buttons
+      const compareButton = document.querySelector('#compare-assessments-btn');
+      if (compareButton) {
+        compareButton.textContent = translations.compare || 'Compare';
+      }
+      
+      const viewButtons = document.querySelectorAll('.view-assessment-btn');
+      viewButtons.forEach(btn => {
+        btn.textContent = translations.view || 'View';
+      });
+      
+      // Update comparison modal title
+      const comparisonModalTitle = document.querySelector('#comparison-modal .modal-title');
+      if (comparisonModalTitle) {
+        comparisonModalTitle.textContent = translations.compare || 'Compare Assessments';
+      }
+      
+      console.log('Assessment history UI labels updated for language change');
+    } catch (error) {
+      console.error('Error updating assessment history UI labels:', error);
+    }
+  }
+  
   // Public API
   return {
     init,
     showHistory,
     hideHistory,
-    loadAssessments
+    loadAssessments,
+    updateHistoryUILabels
   };
 })();

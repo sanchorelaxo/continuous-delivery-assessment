@@ -182,6 +182,14 @@ router.put('/:id', authenticateToken, authorizeRole(ADMIN_ROLES), async (req, re
  */
 router.delete('/:id', authenticateToken, authorizeRole(ADMIN_ROLES), async (req, res) => {
   try {
+    // Validate ObjectId format
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid user ID format' 
+      });
+    }
+    
     const userId = new ObjectId(req.params.id);
     
     // Get current user data to check role
