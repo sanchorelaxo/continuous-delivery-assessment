@@ -6,6 +6,7 @@
     <title>Admin Question Editor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1722,94 +1723,90 @@ loadQuestionsFromDB();
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Authentication and Navigation Scripts -->
+<!-- Authentication Scripts (Service Only - No UI) -->
 <script src="../js/auth/auth-service.js"></script>
-<script src="../js/auth/auth-ui.js"></script>
 
 <script>
-// Initialize authentication and show admin-only navigation items
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for auth scripts to load, then initialize
+// Question Editor - Admin Only Access
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Initialize authentication service only (no UI needed)
+    if (window.authService && typeof window.authService.init === 'function') {
+      await window.authService.init();
+    }
+    
+    // Check if user is authenticated and is sysAdmin
+    if (!window.authService || !window.authService.isAuthenticated()) {
+      // Not authenticated - redirect to main page
+      alert('Please log in to access the Question Editor.');
+      window.location.href = '../index.html';
+      return;
+    }
+    
+    const currentUser = window.authService.getCurrentUser();
+    const isSysAdmin = currentUser && currentUser.role === 'sysAdmin';
+    
+    if (!isSysAdmin) {
+      // Authenticated but not sysAdmin - redirect to main page
+      alert('Access denied. Only System Administrators can access the Question Editor.');
+      window.location.href = '../index.html';
+      return;
+    }
+    
+    // User is authenticated and is sysAdmin - show username in navbar
+    const authContainer = document.querySelector('.navbar .d-flex');
+    if (authContainer) {
+      authContainer.innerHTML = `
+        <div class="d-flex align-items-center">
+          <span class="me-3 text-muted">Logged in as: <strong>${currentUser.username}</strong> (${currentUser.role})</span>
+          <button id="logout-btn" class="btn btn-sm btn-outline-danger">Logout</button>
+        </div>
+      `;
+      
+      // Add logout handler
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function() {
+          if (window.authService && typeof window.authService.logout === 'function') {
+            await window.authService.logout();
+            window.location.href = '../index.html';
+          }
+        });
+      }
+    }
+    
+    // Override navigation event handlers to redirect to main page
     setTimeout(function() {
-        try {
-            // Check if auth service is available and has init method
-            if (window.authService && typeof window.authService.init === 'function') {
-                window.authService.init();
-                
-                // Initialize auth UI (for dropdown event listeners)
-                if (window.authUI && typeof window.authUI.init === 'function') {
-                    window.authUI.init();
-                }
-                
-                // Show admin-only navigation items if user is admin
-                if (window.authService.isAuthenticated() && window.authService.isAdmin()) {
-                    document.querySelectorAll('.admin-only').forEach(item => {
-                        item.classList.remove('d-none');
-                    });
-                }
-                
-                // Ensure admin dashboard containers stay hidden on question editor page
-                const adminDashboard = document.getElementById('admin-dashboard-container');
-                const assessmentHistory = document.getElementById('assessment-history-container');
-                if (adminDashboard) {
-                    adminDashboard.style.display = 'none';
-                    adminDashboard.classList.add('d-none');
-                }
-                if (assessmentHistory) {
-                    assessmentHistory.style.display = 'none';
-                    assessmentHistory.classList.add('d-none');
-                }
-            } else {
-                console.log('Auth service not available - showing admin navigation for development');
-                // Show admin items for development/testing when auth service is not available
-                document.querySelectorAll('.admin-only').forEach(item => {
-                    item.classList.remove('d-none');
-                });
-                
-                // Ensure admin dashboard containers stay hidden on question editor page
-                const adminDashboard = document.getElementById('admin-dashboard-container');
-                const assessmentHistory = document.getElementById('assessment-history-container');
-                if (adminDashboard) {
-                    adminDashboard.style.display = 'none';
-                    adminDashboard.classList.add('d-none');
-                }
-                if (assessmentHistory) {
-                    assessmentHistory.style.display = 'none';
-                    assessmentHistory.classList.add('d-none');
-                }
-            }
-        } catch (error) {
-            console.error('Error initializing auth service:', error);
-        }
-        
-        // Override navigation event handlers to redirect to main page
-        // This prevents errors when clicking nav links that expect main page DOM elements
-        setTimeout(function() {
-            const navAssessment = document.getElementById('nav-assessment');
-            if (navAssessment) {
-                navAssessment.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    window.location.href = '../index.html';
-                });
-            }
-            
-            const navHistory = document.getElementById('nav-history');
-            if (navHistory) {
-                navHistory.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    window.location.href = '../index.html#history';
-                });
-            }
-            
-            const navAdmin = document.getElementById('nav-admin');
-            if (navAdmin) {
-                navAdmin.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    window.location.href = '../index.html#admin';
-                });
-            }
-        }, 200); // Run after auth UI initialization
+      const navAssessment = document.getElementById('nav-assessment');
+      if (navAssessment) {
+        navAssessment.addEventListener('click', function(e) {
+          e.preventDefault();
+          window.location.href = '../index.html';
+        });
+      }
+      
+      const navHistory = document.getElementById('nav-history');
+      if (navHistory) {
+        navHistory.addEventListener('click', function(e) {
+          e.preventDefault();
+          window.location.href = '../index.html#history';
+        });
+      }
+      
+      const navAdmin = document.getElementById('nav-admin');
+      if (navAdmin) {
+        navAdmin.addEventListener('click', function(e) {
+          e.preventDefault();
+          window.location.href = '../index.html#admin';
+        });
+      }
     }, 100);
+    
+  } catch (error) {
+    console.error('Error checking authentication:', error);
+    alert('Authentication error. Please try logging in again.');
+    window.location.href = '../index.html';
+  }
 });
 </script>
 

@@ -7,6 +7,22 @@ window.authUI = (function() {
   let loginModal = null;
   let registerModal = null;
   let profileDropdown = null;
+
+  const DEFAULT_LANG = 'en_CA';
+
+  function getAuthTranslations() {
+    const lang = window.currentLang || document.documentElement.lang || DEFAULT_LANG;
+    const uiTranslations = window.translations && window.translations.ui ? window.translations.ui : {};
+    return uiTranslations[lang] || uiTranslations[DEFAULT_LANG] || {};
+  }
+
+  function translate(key, fallback, source) {
+    const translations = source || getAuthTranslations();
+    if (translations && typeof translations[key] === 'string' && translations[key].length > 0) {
+      return translations[key];
+    }
+    return fallback !== undefined ? fallback : key;
+  }
   
   /**
    * Show assessment form
@@ -252,13 +268,27 @@ window.authUI = (function() {
       const authProfile = document.querySelector('.auth-profile');
       
       if (!authButtons || !authProfile) {
-        console.warn('Auth UI elements not found, recreating...');
-        createProfileDropdown();
+        // Auth UI elements don't exist (e.g., on question editor page)
+        // Just update navigation visibility for admin users if logged in
+        const currentUser = window.authService ? window.authService.getCurrentUser() : null;
+        if (currentUser && window.authService) {
+          const isSysAdmin = window.authService.hasRole(['sysAdmin']);
+          const navAdmin = document.getElementById('nav-admin');
+          const navQuestionEditor = document.getElementById('nav-question-editor');
+          
+          if (navAdmin && navAdmin.parentElement) {
+            navAdmin.parentElement.classList.toggle('d-none', !isSysAdmin);
+          }
+          if (navQuestionEditor && navQuestionEditor.parentElement) {
+            navQuestionEditor.parentElement.classList.toggle('d-none', !isSysAdmin);
+          }
+        }
         return;
       }
       
       // Check if user is logged in
-      const currentUser = window.authService.getCurrentUser();
+      const currentUser = window.authService ? window.authService.getCurrentUser() : null;
+    const translations = getAuthTranslations();
       
       if (currentUser) {
         // Show profile dropdown
@@ -274,7 +304,7 @@ window.authUI = (function() {
         }
         
         if (roleDisplay) {
-          roleDisplay.textContent = `Role: ${formatRole(currentUser.role)}`;
+          roleDisplay.textContent = `${translations.role || 'Role'}: ${formatRole(currentUser.role)}`;
         }
         
         // Check if user is sysAdmin (only sysAdmin can see Admin and Question Editor)
@@ -420,9 +450,20 @@ window.authUI = (function() {
    * @returns {string} Formatted role name
    */
   function formatRole(role) {
-    if (!role) return 'User';
-    
-    // Convert snake_case to Title Case
+    if (!role) return getAuthTranslations().assessmentUser || 'User';
+
+    const translations = getAuthTranslations();
+    const roleKeyMap = {
+      sysAdmin: 'sysAdmin',
+      assessment_admin: 'assessmentAdmin',
+      assessment_user: 'assessmentUser'
+    };
+
+    if (translations && roleKeyMap[role]) {
+      return translations[roleKeyMap[role]] || role;
+    }
+
+    // Convert snake_case to Title Case as a fallback
     return role
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -665,138 +706,39 @@ window.authUI = (function() {
     adminDashboardContainer.classList.remove('d-none');
     adminDashboardContainer.style.display = 'block';
     
-    // Create admin dashboard content if it doesn't exist
-    if (!document.getElementById('admin-dashboard-content')) {
-      try {
-        // Create the admin dashboard content
-        const dashboardContent = `
-          <div class="container mt-4" id="admin-dashboard-content">
-            <h2>Admin Dashboard</h2>
-            <div class="row mt-4">
-              <div class="col-md-4 mb-4">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">User Management</h5>
-                    <p class="card-text">Manage users, roles, and permissions.</p>
-                    <button id="manage-users-btn" class="btn btn-primary">Manage Users</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4 mb-4">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">Group Management</h5>
-                    <p class="card-text">Manage groups, members, and assessments.</p>
-                    <button id="manage-groups-btn" class="btn btn-primary">Manage Groups</button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4 mb-4">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">Assessment Analytics</h5>
-                    <p class="card-text">View analytics and reports for assessments.</p>
-                    <button id="view-analytics-btn" class="btn btn-primary">View Analytics</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        // Set the content
-        adminDashboardContainer.innerHTML = dashboardContent;
-      } catch (error) {
-        console.error('Error creating admin dashboard content:', error);
-        return;
-      }
-      
-      // Add event listeners for the buttons
-      const manageUsersBtn = document.getElementById('manage-users-btn');
-      if (manageUsersBtn) {
-        manageUsersBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          showManageUsers();
-        });
-      }
-      
-      const manageGroupsBtn = document.getElementById('manage-groups-btn');
-      if (manageGroupsBtn) {
-        manageGroupsBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          showManageGroups();
-        });
-      }
-      
-      const viewAnalyticsBtn = document.getElementById('view-analytics-btn');
-      if (viewAnalyticsBtn) {
-        viewAnalyticsBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          alert('Analytics feature coming soon!');
-        });
-      }
-    }
-    
-    // Show the container
-    adminDashboardContainer.style.display = 'block';
-    
-    // Update active nav link
-    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-    const navAdmin = document.getElementById('nav-admin');
-    if (navAdmin) {
-      navAdmin.classList.add('active');
-    }
-    
-    // Get current language and translations
-    const currentLang = window.currentLang || 'en_CA';
-    const ui = window.translations ? window.translations.ui[currentLang] : null;
-    
-    // Fallback translations if not available
-    const t = ui || {
-      adminDashboard: 'Admin Dashboard',
-      userManagement: 'User Management',
-      groupManagement: 'Group Management',
-      manageUsers: 'Manage Users',
-      manageGroups: 'Manage Groups',
-      manageUsersDesc: 'Manage users and their roles',
-      manageGroupsDesc: 'Create and manage user groups',
-      assessmentAnalytics: 'Assessment Analytics',
-      viewAnalytics: 'View Analytics',
-      viewAnalyticsDesc: 'View assessment statistics and trends'
-    };
-    
-    // Create dashboard content with translations
+    const translations = getAuthTranslations();
+
     adminDashboardContainer.innerHTML = `
       <div class="card">
         <div class="card-header bg-primary text-white">
-          <h3>${t.adminDashboard}</h3>
+          <h3>${translate('adminDashboard', 'Admin Dashboard', translations)}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-4 mb-3">
               <div class="card h-100">
-                <div class="card-header">${t.userManagement}</div>
+                <div class="card-header">${translate('userManagement', 'User Management', translations)}</div>
                 <div class="card-body">
-                  <p>${t.manageUsersDesc}</p>
-                  <button id="manage-users-btn" class="btn btn-outline-primary">${t.manageUsers}</button>
+                  <p>${translate('manageUsersDesc', 'Manage users and their roles', translations)}</p>
+                  <button id="manage-users-btn" class="btn btn-outline-primary">${translate('manageUsers', 'Manage Users', translations)}</button>
                 </div>
               </div>
             </div>
             <div class="col-md-4 mb-3">
               <div class="card h-100">
-                <div class="card-header">${t.groupManagement}</div>
+                <div class="card-header">${translate('groupManagement', 'Group Management', translations)}</div>
                 <div class="card-body">
-                  <p>${t.manageGroupsDesc}</p>
-                  <button id="manage-groups-btn" class="btn btn-outline-primary">${t.manageGroups}</button>
+                  <p>${translate('manageGroupsDesc', 'Create and manage user groups', translations)}</p>
+                  <button id="manage-groups-btn" class="btn btn-outline-primary">${translate('manageGroups', 'Manage Groups', translations)}</button>
                 </div>
               </div>
             </div>
             <div class="col-md-4 mb-3">
               <div class="card h-100">
-                <div class="card-header">${t.assessmentAnalytics}</div>
+                <div class="card-header">${translate('assessmentAnalytics', 'Assessment Analytics', translations)}</div>
                 <div class="card-body">
-                  <p>${t.viewAnalyticsDesc}</p>
-                  <button id="view-analytics-btn" class="btn btn-outline-primary">${t.viewAnalytics}</button>
+                  <p>${translate('viewAnalyticsDesc', 'View assessment statistics and trends', translations)}</p>
+                  <button id="view-analytics-btn" class="btn btn-outline-primary">${translate('viewAnalytics', 'View Analytics', translations)}</button>
                 </div>
               </div>
             </div>
@@ -804,13 +746,21 @@ window.authUI = (function() {
         </div>
       </div>
     `;
-    
-    // Add event listeners after the HTML has been inserted
+
+    adminDashboardContainer.classList.remove('d-none');
+    adminDashboardContainer.style.display = 'block';
+
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    const navAdmin = document.getElementById('nav-admin');
+    if (navAdmin) {
+      navAdmin.classList.add('active');
+    }
+
     const manageUsersBtn = document.getElementById('manage-users-btn');
     if (manageUsersBtn) {
       manageUsersBtn.addEventListener('click', showManageUsers);
     }
-    
+
     const manageGroupsBtn = document.getElementById('manage-groups-btn');
     if (manageGroupsBtn) {
       manageGroupsBtn.addEventListener('click', function(e) {
@@ -818,15 +768,14 @@ window.authUI = (function() {
         showManageGroups();
       });
     }
-    
+
     const viewAnalyticsBtn = document.getElementById('view-analytics-btn');
     if (viewAnalyticsBtn) {
       viewAnalyticsBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        alert('Analytics feature coming soon!');
+        alert(translate('analyticsComingSoon', 'Analytics feature coming soon!', translations));
       });
     }
-    
 
   }
   
@@ -850,22 +799,23 @@ window.authUI = (function() {
     }
     
     // Create user management interface
+    const translations = getAuthTranslations();
     adminDashboardContainer.innerHTML = `
       <div class="card">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-          <h3>User Management</h3>
-          <button id="back-to-admin" class="btn btn-sm btn-light">Back to Dashboard</button>
+          <h3>${translate('userManagement', 'User Management', translations)}</h3>
+          <button id="back-to-admin" class="btn btn-sm btn-light">${translate('backToDashboard', 'Back to Dashboard', translations)}</button>
         </div>
         <div class="card-body">
           <div class="row mb-4">
             <div class="col-md-6">
               <div class="input-group">
-                <input type="text" id="user-search" class="form-control" placeholder="Search users...">
-                <button class="btn btn-outline-secondary" type="button">Search</button>
+                <input type="text" id="user-search" class="form-control" placeholder="${translate('searchUsers', 'Search users...', translations)}">
+                <button class="btn btn-outline-secondary" type="button">${translate('search', 'Search', translations)}</button>
               </div>
             </div>
             <div class="col-md-6 text-end">
-              <button id="add-user-btn" class="btn btn-success">Add New User</button>
+              <button id="add-user-btn" class="btn btn-success">${translate('addNewUser', 'Add New User', translations)}</button>
             </div>
           </div>
           
@@ -873,29 +823,29 @@ window.authUI = (function() {
             <table class="table table-striped table-hover">
               <thead>
                 <tr>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Groups</th>
-                  <th>Last Login</th>
-                  <th>Actions</th>
+                  <th>${translate('username', 'Username', translations)}</th>
+                  <th>${translate('email', 'Email', translations)}</th>
+                  <th>${translate('role', 'Role', translations)}</th>
+                  <th>${translate('groupsLabel', 'Groups', translations)}</th>
+                  <th>${translate('lastLogin', 'Last Login', translations)}</th>
+                  <th>${translate('actions', 'Actions', translations)}</th>
                 </tr>
               </thead>
               <tbody id="users-table-body">
                 <tr>
-                  <td colspan="6" class="text-center">Loading users...</td>
+                  <td colspan="6" class="text-center">${translate('loadingUsers', 'Loading users...', translations)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
           
-          <nav aria-label="User pagination">
+          <nav aria-label="${translate('userPagination', 'User pagination', translations)}">
             <ul class="pagination justify-content-center">
-              <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+              <li class="page-item disabled"><a class="page-link" href="#">${translate('previous', 'Previous', translations)}</a></li>
               <li class="page-item active"><a class="page-link" href="#">1</a></li>
               <li class="page-item"><a class="page-link" href="#">2</a></li>
               <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item"><a class="page-link" href="#">Next</a></li>
+              <li class="page-item"><a class="page-link" href="#">${translate('next', 'Next', translations)}</a></li>
             </ul>
           </nav>
         </div>
@@ -1032,6 +982,7 @@ window.authUI = (function() {
    */
   function loadUsers() {
     const usersTableBody = document.getElementById('users-table-body');
+    const translations = getAuthTranslations();
     
     // Get authentication token
     const token = window.authService.getToken();
@@ -1041,9 +992,9 @@ window.authUI = (function() {
       <tr>
         <td colspan="6" class="text-center">
           <div class="spinner-border spinner-border-sm text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden">${translate('loading', 'Loading...', translations)}</span>
           </div>
-          Loading users...
+          ${translate('loadingUsers', 'Loading users...', translations)}
         </td>
       </tr>
     `;
@@ -1071,12 +1022,12 @@ window.authUI = (function() {
           const row = document.createElement('tr');
           
           // Format last login date
-          const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never';
+          const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString() : translate('never', 'Never', translations);
           
           // Format groups
           const groups = user.groups && user.groups.length > 0 ? 
             user.groups.join(', ') : 
-            'None';
+            translate('none', 'None', translations);
           
           // Ensure we're using the correct ID field (_id for MongoDB)
           const userId = user._id || user.id || user.userId;
@@ -1089,8 +1040,8 @@ window.authUI = (function() {
             <td>${lastLogin}</td>
             <td>
               <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-primary edit-user" data-user-id="${userId}">Edit</button>
-                <button type="button" class="btn btn-outline-danger delete-user" data-user-id="${userId}">Delete</button>
+                <button type="button" class="btn btn-outline-primary edit-user" data-user-id="${userId}">${translate('edit', 'Edit', translations)}</button>
+                <button type="button" class="btn btn-outline-danger delete-user" data-user-id="${userId}">${translate('delete', 'Delete', translations)}</button>
               </div>
             </td>
           `;
@@ -1115,7 +1066,7 @@ window.authUI = (function() {
       } else {
         usersTableBody.innerHTML = `
           <tr>
-            <td colspan="6" class="text-center">No users found</td>
+            <td colspan="6" class="text-center">${translate('noUsersFound', 'No users found', translations)}</td>
           </tr>
         `;
       }
@@ -1125,7 +1076,7 @@ window.authUI = (function() {
       usersTableBody.innerHTML = `
         <tr>
           <td colspan="6" class="text-center text-danger">
-            Error loading users: ${error.message}
+            ${translate('errorLoadingUsers', 'Error loading users', translations)}: ${error.message}
           </td>
         </tr>
       `;
@@ -1790,44 +1741,36 @@ window.authUI = (function() {
     const adminDashboardContainer = document.getElementById('admin-dashboard-container');
     if (!adminDashboardContainer) return;
     
+    const translations = getAuthTranslations();
+
     adminDashboardContainer.innerHTML = `
-      <div class="container-fluid py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2>Group Management</h2>
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h3>${translate('groupManagement', 'Group Management', translations)}</h3>
           <div>
-            <button id="add-group-btn" class="btn btn-primary me-2">Add Group</button>
-            <button id="back-to-admin-btn" class="btn btn-secondary">Back to Admin</button>
+            <button id="add-group-btn" class="btn btn-primary me-2">${translate('addNewGroup', translate('addGroup', 'Add Group', translations), translations)}</button>
+            <button id="back-to-admin-btn" class="btn btn-secondary">${translate('backToAdmin', 'Back to Admin', translations)}</button>
           </div>
         </div>
-        
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="mb-0">Groups</h5>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table class="table table-striped">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Members</th>
-                        <th>Assessments</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody id="groups-table-body">
-                      <tr>
-                        <td colspan="6" class="text-center">Loading groups...</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>${translate('groupName', 'Group Name', translations)}</th>
+                  <th>${translate('groupDescription', 'Group Description', translations)}</th>
+                  <th>${translate('members', 'Members', translations)}</th>
+                  <th>${translate('assessments', 'Assessments', translations)}</th>
+                  <th>${translate('createdAt', 'Created', translations)}</th>
+                  <th>${translate('actions', 'Actions', translations)}</th>
+                </tr>
+              </thead>
+              <tbody id="groups-table-body">
+                <tr>
+                  <td colspan="6" class="text-center">${translate('loadingGroups', 'Loading groups...', translations)}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1857,6 +1800,8 @@ window.authUI = (function() {
       if (!token) {
         throw new Error('Authentication required');
       }
+
+      const translations = getAuthTranslations();
       
       const response = await fetch('/api/groups', {
         method: 'GET',
@@ -1886,33 +1831,40 @@ window.authUI = (function() {
         const memberCount = group.memberDetails ? group.memberDetails.length : 0;
         const assessmentCount = group.assessments ? group.assessments.length : 0;
         const createdDate = new Date(group.createdAt).toLocaleDateString();
+        const memberLabel = memberCount === 1 ? translate('memberSingle', 'Member', translations) : translate('members', 'Members', translations);
+        const assessmentLabel = assessmentCount === 1 ? translate('assessmentSingle', 'Assessment', translations) : translate('assessments', 'Assessments', translations);
+        const viewLabel = translate('view', 'View', translations);
+        const editTitle = translate('editGroup', 'Edit Group', translations);
+        const manageMembersTitle = translate('manageMembers', 'Manage Members', translations);
+        const manageAssessmentsTitle = translate('manageAssessments', 'Manage Assessments', translations);
+        const deleteTitle = translate('deleteGroup', 'Delete Group', translations);
         
         return `
           <tr>
             <td><strong>${group.name}</strong></td>
             <td>${group.description || '-'}</td>
             <td>
-              <span class="badge bg-info">${memberCount} members</span>
-              ${memberCount > 0 ? `<button class="btn btn-sm btn-outline-info ms-1" onclick="window.authUI.showGroupMembers('${group.id}')">View</button>` : ''}
+              <span class="badge bg-info">${memberCount} ${memberLabel.toLowerCase()}</span>
+              ${memberCount > 0 ? `<button class="btn btn-sm btn-outline-info ms-1" onclick="window.authUI.showGroupMembers('${group.id}')">${viewLabel}</button>` : ''}
             </td>
             <td>
-              <span class="badge bg-success">${assessmentCount} assessments</span>
-              ${assessmentCount > 0 ? `<button class="btn btn-sm btn-outline-success ms-1" onclick="window.authUI.showGroupAssessments('${group.id}')">View</button>` : ''}
+              <span class="badge bg-success">${assessmentCount} ${assessmentLabel.toLowerCase()}</span>
+              ${assessmentCount > 0 ? `<button class="btn btn-sm btn-outline-success ms-1" onclick="window.authUI.manageGroupAssessments('${group.id}')">${viewLabel}</button>` : ''}
             </td>
             <td>${createdDate}</td>
             <td>
-              <div class="btn-group btn-group-sm" role="group">
-                <button class="btn btn-outline-primary" onclick="window.authUI.editGroup('${group.id}')" title="Edit Group">
-                  <i class="fas fa-edit"></i>
+              <div class="btn-group" role="group">
+                <button class="btn btn-sm btn-outline-primary" onclick="window.authUI.editGroup('${group.id}')" title="${editTitle}">
+                  <i class="fas fa-edit"></i> ${translate('edit', 'Edit', translations)}
                 </button>
-                <button class="btn btn-outline-info" onclick="window.authUI.manageGroupMembers('${group.id}')" title="Manage Members">
-                  <i class="fas fa-users"></i>
+                <button class="btn btn-sm btn-outline-info" onclick="window.authUI.manageGroupMembers('${group.id}')" title="${manageMembersTitle}">
+                  <i class="fas fa-users"></i> ${translate('members', 'Members', translations)}
                 </button>
-                <button class="btn btn-outline-success" onclick="window.authUI.manageGroupAssessments('${group.id}')" title="Manage Assessments">
-                  <i class="fas fa-clipboard-list"></i>
+                <button class="btn btn-sm btn-outline-success" onclick="window.authUI.manageGroupAssessments('${group.id}')" title="${manageAssessmentsTitle}">
+                  <i class="fas fa-clipboard-list"></i> ${translate('assessments', 'Assessments', translations)}
                 </button>
-                <button class="btn btn-outline-danger" onclick="window.authUI.deleteGroup('${group.id}')" title="Delete Group">
-                  <i class="fas fa-trash"></i>
+                <button class="btn btn-sm btn-outline-danger" onclick="window.authUI.deleteGroup('${group.id}')" title="${deleteTitle}">
+                  <i class="fas fa-trash"></i> ${translate('delete', 'Delete', translations)}
                 </button>
               </div>
             </td>
@@ -1925,7 +1877,7 @@ window.authUI = (function() {
       const tableBody = document.getElementById('groups-table-body');
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center text-danger">Error loading groups: ${error.message}</td>
+          <td colspan="6" class="text-center text-danger">${translate('errorLoadingGroups', 'Error loading groups', translations)}: ${error.message}</td>
         </tr>
       `;
     }
@@ -3436,8 +3388,11 @@ window.authUI = (function() {
         // Create authentication modals
         createAuthModals();
         
-        // Create the auth UI elements in the navbar
-        createProfileDropdown();
+        // Create the auth UI elements in the navbar (only if navbar exists)
+        const navbarNav = document.querySelector('#navbarNav');
+        if (navbarNav) {
+          createProfileDropdown();
+        }
         
         // Cache DOM elements
         loginModal = document.getElementById('login-modal');
@@ -3535,10 +3490,10 @@ window.authUI = (function() {
       try {
         // Update dynamically created modal titles and content
         const modalTitles = {
-          'add-user-modal': translations.addUser,
+          'add-user-modal': translations.addNewUser || translations.addUser,
           'edit-user-modal': translations.editUser,
-          'delete-user-confirm-modal': translations.deleteUser,
-          'add-group-modal': translations.addGroup,
+          'delete-user-confirm-modal': translations.confirmDeletion || translations.deleteUser,
+          'add-group-modal': translations.addNewGroup || translations.addGroup,
           'edit-group-modal': translations.editGroup,
           'delete-group-modal': translations.deleteGroup,
           'manage-members-modal': translations.manageMembers,
@@ -3560,29 +3515,33 @@ window.authUI = (function() {
         
         // Update button texts in modals
         const buttonTexts = {
-          'save-user-btn': translations.save,
-          'save-group-btn': translations.save,
-          'confirm-delete-btn': translations.delete
+          'save-user-btn': translate('save', 'Save', translations),
+          'save-group-btn': translate('save', 'Save', translations),
+          'confirm-delete-btn': translate('delete', 'Delete', translations),
+          'add-user-btn': translate('addNewUser', translate('addUser', 'Add New User', translations), translations),
+          'add-group-btn': translate('addNewGroup', translate('addGroup', 'Add Group', translations), translations),
+          'back-to-admin': translate('backToDashboard', 'Back to Dashboard', translations),
+          'back-to-admin-btn': translate('backToAdmin', 'Back to Admin', translations)
         };
-        
+
         Object.entries(buttonTexts).forEach(([buttonId, text]) => {
           const button = document.getElementById(buttonId);
           if (button) {
             button.textContent = text;
           }
         });
-        
+
         // Update form labels in modals
         const labelMappings = {
-          'username': translations.username,
-          'email': translations.email,
-          'password': translations.password,
-          'confirm-password': translations.confirmPassword,
-          'role': translations.role,
-          'group-name': translations.groupName,
-          'group-description': translations.groupDescription
+          'username': translate('username', 'Username', translations),
+          'email': translate('email', 'Email', translations),
+          'password': translate('password', 'Password', translations),
+          'confirm-password': translate('confirmPassword', 'Confirm Password', translations),
+          'role': translate('role', 'Role', translations),
+          'group-name': translate('groupName', 'Group Name', translations),
+          'group-description': translate('groupDescription', 'Group Description', translations)
         };
-        
+
         Object.entries(labelMappings).forEach(([fieldName, labelText]) => {
           const labels = document.querySelectorAll(`label[for*="${fieldName}"]`);
           labels.forEach(label => {
@@ -3594,14 +3553,17 @@ window.authUI = (function() {
         const tableHeaders = document.querySelectorAll('#admin-dashboard-container th');
         tableHeaders.forEach(th => {
           const text = th.textContent.trim();
-          if (text === 'Username' || text === 'Nom d\'utilisateur') th.textContent = translations.username;
-          else if (text === 'Email' || text === 'Courriel') th.textContent = translations.email;
-          else if (text === 'Role' || text === 'Rôle') th.textContent = translations.role;
-          else if (text === 'Actions') th.textContent = translations.actions;
-          else if (text === 'Members' || text === 'Membres') th.textContent = translations.members;
-          else if (text === 'Assessments' || text === 'Évaluations') th.textContent = translations.assessments;
-          else if (text === 'Group Name' || text === 'Nom du groupe') th.textContent = translations.groupName;
-          else if (text === 'Description') th.textContent = translations.groupDescription;
+          if (['Username', "Nom d'utilisateur"].includes(text)) th.textContent = translate('username', text, translations);
+          else if (['Email', 'Courriel'].includes(text)) th.textContent = translate('email', text, translations);
+          else if (['Role', 'Rôle'].includes(text)) th.textContent = translate('role', text, translations);
+          else if (['Actions', 'Actions'].includes(text)) th.textContent = translate('actions', text, translations);
+          else if (['Members', 'Membres'].includes(text)) th.textContent = translate('members', text, translations);
+          else if (['Assessments', 'Évaluations'].includes(text)) th.textContent = translate('assessments', text, translations);
+          else if (['Group Name', 'Nom du groupe'].includes(text)) th.textContent = translate('groupName', text, translations);
+          else if (['Description', 'Description'].includes(text)) th.textContent = translate('groupDescription', text, translations);
+          else if (['Groups', 'Groupes'].includes(text)) th.textContent = translate('groupsLabel', text, translations);
+          else if (['Last Login', 'Dernière connexion'].includes(text)) th.textContent = translate('lastLogin', text, translations);
+          else if (['Status', 'Statut'].includes(text)) th.textContent = translate('status', text, translations);
         });
         
         // Update dropdown menu items
