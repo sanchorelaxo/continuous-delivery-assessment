@@ -773,10 +773,242 @@ window.authUI = (function() {
     if (viewAnalyticsBtn) {
       viewAnalyticsBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        alert(translate('analyticsComingSoon', 'Analytics feature coming soon!', translations));
+        showAnalytics();
       });
     }
 
+  }
+  
+  /**
+   * Show Assessment Analytics
+   */
+  async function showAnalytics() {
+    const adminDashboardContainer = document.getElementById('admin-dashboard-container');
+    if (!adminDashboardContainer) return;
+    
+    const translations = getAuthTranslations();
+    
+    // Show loading state
+    adminDashboardContainer.innerHTML = `
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h3>${translate('assessmentAnalytics', 'Assessment Analytics', translations)}</h3>
+          <button id="back-to-admin" class="btn btn-light btn-sm">${translate('backToAdmin', 'Back to Admin', translations)}</button>
+        </div>
+        <div class="card-body text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2">${translate('loadingAnalytics', 'Loading analytics...', translations)}</p>
+        </div>
+      </div>
+    `;
+    
+    try {
+      // Fetch all analytics data in parallel
+      const [oneAndDonesRes, leaderboardRes, recentRes] = await Promise.all([
+        fetch('/api/analytics/one-and-dones', {
+          headers: { 'Authorization': `Bearer ${authService.getToken()}` }
+        }),
+        fetch('/api/analytics/improvement-leaderboard', {
+          headers: { 'Authorization': `Bearer ${authService.getToken()}` }
+        }),
+        fetch('/api/analytics/recent-submissions?limit=15', {
+          headers: { 'Authorization': `Bearer ${authService.getToken()}` }
+        })
+      ]);
+      
+      const oneAndDones = await oneAndDonesRes.json();
+      const leaderboard = await leaderboardRes.json();
+      const recent = await recentRes.json();
+      
+      // Render analytics dashboard
+      adminDashboardContainer.innerHTML = `
+        <div class="card">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3>${translate('assessmentAnalytics', 'Assessment Analytics', translations)}</h3>
+            <button id="back-to-admin" class="btn btn-light btn-sm">${translate('backToAdmin', 'Back to Admin', translations)}</button>
+          </div>
+          <div class="card-body">
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <div class="card bg-info text-white">
+                  <div class="card-body">
+                    <h5 class="card-title">${translate('oneAndDones', 'One & Dones', translations)}</h5>
+                    <h2 class="display-4">${oneAndDones.oneAndDones?.length || 0}</h2>
+                    <p class="card-text">${translate('oneAndDonesCount', 'Teams with single assessment', translations)}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-success text-white">
+                  <div class="card-body">
+                    <h5 class="card-title">${translate('improvingTeams', 'Improving Teams', translations)}</h5>
+                    <h2 class="display-4">${leaderboard.leaderboard?.filter(t => t.totalImprovement > 0).length || 0}</h2>
+                    <p class="card-text">${translate('improvingTeamsCount', 'Teams showing improvement', translations)}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-warning text-white">
+                  <div class="card-body">
+                    <h5 class="card-title">${translate('recentSubmissions', 'Recent Submissions', translations)}</h5>
+                    <h2 class="display-4">${recent.submissions?.length || 0}</h2>
+                    <p class="card-text">${translate('recentSubmissionsCount', 'Latest assessments', translations)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tabs for different analytics views -->
+            <ul class="nav nav-tabs" id="analyticsTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="one-dones-tab" data-bs-toggle="tab" data-bs-target="#one-dones-panel" type="button" role="tab">
+                  ${translate('oneAndDonesTab', 'One & Dones', translations)}
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="leaderboard-tab" data-bs-toggle="tab" data-bs-target="#leaderboard-panel" type="button" role="tab">
+                  ${translate('improvementLeaderboardTab', 'Improvement Leaderboard', translations)}
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent-panel" type="button" role="tab">
+                  ${translate('recentSubmissionsTab', 'Recent Submissions', translations)}
+                </button>
+              </li>
+            </ul>
+            
+            <div class="tab-content mt-3" id="analyticsTabContent">
+              <!-- One & Dones Tab -->
+              <div class="tab-pane fade show active" id="one-dones-panel" role="tabpanel">
+                <div class="alert alert-info">
+                  <strong>${translate('oneAndDones', 'One & Dones', translations)}:</strong> ${translate('oneAndDonesDescription', 'Teams that have completed only one assessment without any follow-ups. Consider reaching out to encourage continuous improvement tracking.', translations)}
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>${translate('teamName', 'Team Name', translations)}</th>
+                        <th>${translate('system', 'System', translations)}</th>
+                        <th>${translate('email', 'Email', translations)}</th>
+                        <th>${translate('assessmentDate', 'Assessment Date', translations)}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${oneAndDones.oneAndDones?.map(team => `
+                        <tr>
+                          <td>${team.teamName}</td>
+                          <td>${team.systemName || 'N/A'}</td>
+                          <td>${team.email || 'N/A'}</td>
+                          <td>${new Date(team.timestamp).toLocaleDateString()}</td>
+                        </tr>
+                      `).join('') || `<tr><td colspan="4" class="text-center">${translate('allTeamsHaveFollowups', 'All teams have follow-up assessments!', translations)}</td></tr>`}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <!-- Improvement Leaderboard Tab -->
+              <div class="tab-pane fade" id="leaderboard-panel" role="tabpanel">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>${translate('rank', 'Rank', translations)}</th>
+                        <th>${translate('teamName', 'Team Name', translations)}</th>
+                        <th>${translate('totalImprovement', 'Total Improvement', translations)}</th>
+                        <th>${translate('assessments', 'Assessments', translations)}</th>
+                        <th>${translate('period', 'Period', translations)}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${leaderboard.leaderboard?.map((team, index) => `
+                        <tr>
+                          <td>
+                            ${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                          </td>
+                          <td>${team.teamName}</td>
+                          <td>
+                            <span class="badge ${team.totalImprovement > 0 ? 'bg-success' : team.totalImprovement < 0 ? 'bg-danger' : 'bg-secondary'}">
+                              ${team.totalImprovement > 0 ? '+' : ''}${team.totalImprovement}
+                            </span>
+                          </td>
+                          <td>${team.assessmentCount}</td>
+                          <td>
+                            <small>${new Date(team.firstDate).toLocaleDateString()} - ${new Date(team.latestDate).toLocaleDateString()}</small>
+                          </td>
+                        </tr>
+                      `).join('') || `<tr><td colspan="5" class="text-center">${translate('noTeamsWithMultipleAssessments', 'No teams with multiple assessments', translations)}</td></tr>`}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <!-- Recent Submissions Tab -->
+              <div class="tab-pane fade" id="recent-panel" role="tabpanel">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>${translate('date', 'Date', translations)}</th>
+                        <th>${translate('teamName', 'Team Name', translations)}</th>
+                        <th>${translate('system', 'System', translations)}</th>
+                        <th>${translate('type', 'Type', translations)}</th>
+                        <th>${translate('score', 'Score', translations)}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${recent.submissions?.map(sub => `
+                        <tr>
+                          <td>${new Date(sub.timestamp).toLocaleDateString()}</td>
+                          <td>${sub.teamName}</td>
+                          <td>${sub.systemName}</td>
+                          <td>
+                            <span class="badge ${sub.isFirstSubmission ? 'bg-primary' : 'bg-secondary'}">
+                              ${sub.isFirstSubmission ? translate('first', 'First', translations) : translate('followUp', 'Follow-up', translations)}
+                            </span>
+                          </td>
+                          <td>${Math.round(sub.overallScore)}%</td>
+                        </tr>
+                      `).join('') || `<tr><td colspan="5" class="text-center">${translate('noSubmissionsFound', 'No submissions found', translations)}</td></tr>`}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add event listener for back button
+      document.getElementById('back-to-admin').addEventListener('click', function(e) {
+        e.preventDefault();
+        showAdminDashboard();
+      });
+      
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      adminDashboardContainer.innerHTML = `
+        <div class="card">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3>${translate('assessmentAnalytics', 'Assessment Analytics', translations)}</h3>
+            <button id="back-to-admin" class="btn btn-light btn-sm">${translate('backToAdmin', 'Back to Admin', translations)}</button>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-danger">
+              <strong>${translate('error', 'Error', translations)}:</strong> ${translate('errorLoadingAnalytics', 'Failed to load analytics data', translations)}. ${error.message}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('back-to-admin').addEventListener('click', function(e) {
+        e.preventDefault();
+        showAdminDashboard();
+      });
+    }
   }
   
   /**

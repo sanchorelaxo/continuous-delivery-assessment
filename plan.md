@@ -46,8 +46,7 @@
 - [x] Add comprehensive translations for authentication system
 - [x] Add team name autocomplete with MongoDB integration
 - [x] Fix language toggle for admin dashboard UI elements, modals, dashboard, tables, cards, buttons, etc.
-- [ ] Add Assessment Analytics UI for admins : a list of assessments without follow up submissions (called "one & dones"), radar improvment leaderboards (teams with the most and/or highest improvement scores across the 8 categories), list of most recent assessment submissions (sort by most recent first, also include team name and a boolean that indicates if the team the submission is a first or follow-up), arrange and group these logically in dashboard     )
-)
+- [x] Add Assessment Analytics UI for admins: "one & dones" (teams with single assessments), improvement leaderboards (teams ranked by total improvement across 8 categories), recent submissions (sorted by date, showing team name and first/follow-up indicator), with full bilingual support
 ## Current Goal
 
-**Next Task**: Add Assessment Analytics UI for admins
+**Status**: Assessment Analytics feature completed! All planned features have been implemented.

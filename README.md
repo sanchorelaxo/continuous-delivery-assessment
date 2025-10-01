@@ -21,6 +21,7 @@ A comprehensive web-based assessment tool to evaluate an organization's continuo
 - **Admin Dashboard**: User and group management for administrators
 - **Role-based Access Control**: Different permission levels (sysAdmin, assessment_admin, assessment_user)
 - **Team Name Autocomplete**: Smart suggestions from previous assessments when entering team names
+- **Assessment Analytics**: Track "one & dones" (teams with single assessments), improvement leaderboards, and recent submissions
 
 ## Practice Areas
 

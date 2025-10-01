@@ -854,6 +854,167 @@ app.post('/api/assessments/compare', optionalAuth, async (req, res) => {
   }
 });
 
+// Analytics API Endpoints
+// Get "one & done" assessments (teams with only one assessment, no follow-ups)
+app.get('/api/analytics/one-and-dones', authenticateToken, async (req, res) => {
+  try {
+    const assessments = db.collection('assessments');
+    
+    // Group by teamName and count assessments per team
+    const teamCounts = await assessments.aggregate([
+      {
+        $group: {
+          _id: '$metadata.teamName',
+          count: { $sum: 1 },
+          firstAssessment: { $first: '$$ROOT' }
+        }
+      },
+      {
+        $match: { count: 1 }
+      },
+      {
+        $project: {
+          teamName: '$_id',
+          assessmentId: '$firstAssessment._id',
+          systemName: '$firstAssessment.metadata.systemName',
+          email: '$firstAssessment.metadata.email',
+          timestamp: '$firstAssessment.timestamp',
+          _id: 0
+        }
+      },
+      {
+        $sort: { timestamp: -1 }
+      }
+    ]).toArray();
+    
+    res.json({ success: true, oneAndDones: teamCounts });
+  } catch (error) {
+    console.error('Error fetching one & dones:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get improvement leaderboard (teams with highest improvement across categories)
+app.get('/api/analytics/improvement-leaderboard', authenticateToken, async (req, res) => {
+  try {
+    const assessments = db.collection('assessments');
+    
+    // Get teams with multiple assessments
+    const teams = await assessments.aggregate([
+      {
+        $group: {
+          _id: '$metadata.teamName',
+          assessments: { $push: '$$ROOT' }
+        }
+      },
+      {
+        $match: { 'assessments.1': { $exists: true } }
+      }
+    ]).toArray();
+    
+    const improvements = [];
+    
+    for (const team of teams) {
+      // Sort assessments by timestamp
+      const sorted = team.assessments.sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+      );
+      
+      const first = sorted[0];
+      const latest = sorted[sorted.length - 1];
+      
+      if (first.results && latest.results) {
+        // Calculate total improvement across all categories
+        let totalImprovement = 0;
+        const categoryImprovements = {};
+        
+        for (const category in latest.results) {
+          if (first.results[category]) {
+            const improvement = (latest.results[category].score || 0) - (first.results[category].score || 0);
+            categoryImprovements[category] = improvement;
+            totalImprovement += improvement;
+          }
+        }
+        
+        improvements.push({
+          teamName: team._id,
+          totalImprovement: Math.round(totalImprovement * 100) / 100,
+          categoryImprovements,
+          assessmentCount: sorted.length,
+          firstDate: first.timestamp,
+          latestDate: latest.timestamp
+        });
+      }
+    }
+    
+    // Sort by total improvement descending
+    improvements.sort((a, b) => b.totalImprovement - a.totalImprovement);
+    
+    res.json({ success: true, leaderboard: improvements });
+  } catch (error) {
+    console.error('Error fetching improvement leaderboard:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get recent assessment submissions
+app.get('/api/analytics/recent-submissions', authenticateToken, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const assessments = db.collection('assessments');
+    
+    // Get all assessments sorted by timestamp
+    const allAssessments = await assessments.find({})
+      .sort({ timestamp: -1 })
+      .limit(limit * 2) // Get more to ensure we have enough after processing
+      .toArray();
+    
+    // Group by team to determine if first or follow-up
+    const teamFirstAssessments = {};
+    const submissions = [];
+    
+    // First pass: identify first assessment for each team
+    for (const assessment of allAssessments) {
+      const teamName = assessment.metadata?.teamName;
+      if (!teamName) continue;
+      
+      if (!teamFirstAssessments[teamName]) {
+        teamFirstAssessments[teamName] = assessment.timestamp;
+      } else {
+        // Update if this is earlier
+        if (new Date(assessment.timestamp) < new Date(teamFirstAssessments[teamName])) {
+          teamFirstAssessments[teamName] = assessment.timestamp;
+        }
+      }
+    }
+    
+    // Second pass: build submissions list
+    for (const assessment of allAssessments) {
+      const teamName = assessment.metadata?.teamName;
+      if (!teamName) continue;
+      
+      const isFirst = assessment.timestamp === teamFirstAssessments[teamName];
+      
+      submissions.push({
+        assessmentId: assessment._id,
+        teamName,
+        systemName: assessment.metadata?.systemName || 'N/A',
+        email: assessment.metadata?.email || 'N/A',
+        timestamp: assessment.timestamp,
+        isFirstSubmission: isFirst,
+        overallScore: assessment.results?.overall?.percentage || 0
+      });
+      
+      if (submissions.length >= limit) break;
+    }
+    
+    res.json({ success: true, submissions });
+  } catch (error) {
+    console.error('Error fetching recent submissions:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
