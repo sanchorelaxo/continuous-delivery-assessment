@@ -13,7 +13,7 @@
     <script src="js/translations.js"></script>
     <script src="js/scoring.js"></script>
     <script src="js/db-integration.js"></script>
-    <script src="js/question-loader.js"></script>
+    <script src="js/question-loader.js?v=20251001"></script>
     <script src="js/auth/auth-service.js"></script>
     <script src="js/auth/auth-ui.js"></script>
     <script src="js/auth/assessment-history.js"></script>
@@ -57,6 +57,52 @@
             #username-display {
                 max-width: 80px !important;
             }
+        }
+        
+        /* Autocomplete dropdown styles */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ced4da;
+            border-top: none;
+            border-radius: 0 0 0.25rem 0.25rem;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background-color: #f8f9fa;
+        }
+
+        .autocomplete-item:active {
+            background-color: #e9ecef;
+        }
+
+        .autocomplete-loading {
+            padding: 0.5rem 0.75rem;
+            color: #6c757d;
+            font-style: italic;
         }
     </style>
     
@@ -256,7 +302,12 @@
             // Check if we should use the question loader
             if (window.questionLoader) {
                 // Use the question loader to render questions
-                window.questionLoader.renderQuestions().catch(error => {
+                window.questionLoader.renderQuestions().then(() => {
+                    // Initialize autocomplete after questions are rendered
+                    if (typeof window.initTeamNameAutocomplete === 'function') {
+                        window.initTeamNameAutocomplete();
+                    }
+                }).catch(error => {
                     console.error('Error rendering questions:', error);
                     // Fall back to legacy question loading if dynamic loading fails
                     initializeLegacyAssessment();
@@ -295,7 +346,10 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="team-name" class="form-label" id="team-name-label">${ui.teamName} <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="team-name" name="teamName" required minlength="2" placeholder="${ui.teamNamePlaceholder}">
+                            <div class="autocomplete-container">
+                                <input type="text" class="form-control" id="team-name" name="teamName" required minlength="2" placeholder="${ui.teamNamePlaceholder}" autocomplete="off">
+                                <div id="team-name-autocomplete" class="autocomplete-dropdown"></div>
+                            </div>
                             <div class="invalid-feedback" id="team-name-error">
                                 ${ui.requiredField}
                             </div>
@@ -1948,6 +2002,140 @@ ${recommendations}
                 return '';
             }
         };
+    </script>
+
+    <script>
+// Team Name Autocomplete Functionality
+window.initTeamNameAutocomplete = function() {
+    const teamNameInput = document.getElementById('team-name');
+    const autocompleteDropdown = document.getElementById('team-name-autocomplete');
+    
+    if (!teamNameInput || !autocompleteDropdown) {
+        return;
+    }
+    
+    let debounceTimer;
+    let currentFocus = -1;
+    
+    // Fetch team names from API
+    async function fetchTeamNames(searchTerm) {
+        try {
+            const url = `/api/team-names?search=${encodeURIComponent(searchTerm)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.success ? data.teamNames : [];
+        } catch (error) {
+            console.error('Error fetching team names:', error);
+            return [];
+        }
+    }
+    
+    // Show autocomplete dropdown
+    function showAutocomplete(items) {
+        autocompleteDropdown.innerHTML = '';
+        currentFocus = -1;
+        
+        if (items.length === 0) {
+            autocompleteDropdown.classList.remove('show');
+            return;
+        }
+        
+        items.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.textContent = item;
+            div.setAttribute('data-index', index);
+            
+            div.addEventListener('click', function() {
+                teamNameInput.value = item;
+                autocompleteDropdown.classList.remove('show');
+                teamNameInput.focus();
+            });
+            
+            autocompleteDropdown.appendChild(div);
+        });
+        
+        autocompleteDropdown.classList.add('show');
+    }
+    
+    // Hide autocomplete dropdown
+    function hideAutocomplete() {
+        autocompleteDropdown.classList.remove('show');
+    }
+    
+    // Handle keyboard navigation
+    function setActive(items) {
+        if (!items) return false;
+        removeActive(items);
+        if (currentFocus >= items.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        items[currentFocus].classList.add('active');
+    }
+    
+    function removeActive(items) {
+        for (let i = 0; i < items.length; i++) {
+            items[i].classList.remove('active');
+        }
+    }
+    
+    // Input event listener
+    teamNameInput.addEventListener('input', function(e) {
+        const value = this.value.trim();
+        
+        clearTimeout(debounceTimer);
+        
+        if (value.length === 0) {
+            hideAutocomplete();
+            return;
+        }
+        
+        // Show loading state
+        autocompleteDropdown.innerHTML = '<div class="autocomplete-loading">Loading...</div>';
+        autocompleteDropdown.classList.add('show');
+        
+        // Debounce API calls
+        debounceTimer = setTimeout(async () => {
+            const teamNames = await fetchTeamNames(value);
+            showAutocomplete(teamNames);
+        }, 300);
+    });
+    
+    // Keyboard navigation
+    teamNameInput.addEventListener('keydown', function(e) {
+        const items = autocompleteDropdown.getElementsByClassName('autocomplete-item');
+        
+        if (e.keyCode === 40) { // Down arrow
+            e.preventDefault();
+            currentFocus++;
+            setActive(items);
+        } else if (e.keyCode === 38) { // Up arrow
+            e.preventDefault();
+            currentFocus--;
+            setActive(items);
+        } else if (e.keyCode === 13) { // Enter
+            if (currentFocus > -1 && items[currentFocus]) {
+                e.preventDefault();
+                items[currentFocus].click();
+            }
+        } else if (e.keyCode === 27) { // Escape
+            hideAutocomplete();
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target !== teamNameInput) {
+            hideAutocomplete();
+        }
+    });
+    
+    // Prevent form submission on Enter in autocomplete
+    teamNameInput.addEventListener('keypress', function(e) {
+        if (e.keyCode === 13 && autocompleteDropdown.classList.contains('show')) {
+            e.preventDefault();
+        }
+    });
+};
     </script>
 </body>
 </html>

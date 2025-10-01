@@ -311,8 +311,11 @@ window.questionLoader = {
                 </div>
                 <div class="mb-3">
                     <label for="team-name" class="form-label">${uiTranslations.teamName || 'Team/Squad Name'}</label>
-                    <input type="text" class="form-control" id="team-name" name="team-name" 
-                           placeholder="${uiTranslations.teamNamePlaceholder || 'Enter your team or squad name'}" required>
+                    <div class="autocomplete-container">
+                        <input type="text" class="form-control" id="team-name" name="team-name" 
+                               placeholder="${uiTranslations.teamNamePlaceholder || 'Enter your team or squad name'}" required autocomplete="off">
+                        <div id="team-name-autocomplete" class="autocomplete-dropdown"></div>
+                    </div>
                     <div class="invalid-feedback">${uiTranslations.requiredField || 'This field is required'}</div>
                 </div>
                 <div class="mb-3">
@@ -517,8 +520,11 @@ renderAssessmentInfoSection: function(form, uiTranslations) {
             </div>
             <div class="mb-3">
                 <label for="team-name" class="form-label">${uiTranslations.teamName || 'Team/Squad Name'}</label>
-                <input type="text" class="form-control" id="team-name" name="team-name" 
-                       placeholder="${uiTranslations.teamNamePlaceholder || 'Enter your team or squad name'}" required>
+                <div class="autocomplete-container">
+                    <input type="text" class="form-control" id="team-name" name="team-name" 
+                           placeholder="${uiTranslations.teamNamePlaceholder || 'Enter your team or squad name'}" required autocomplete="off">
+                    <div id="team-name-autocomplete" class="autocomplete-dropdown"></div>
+                </div>
                 <div class="invalid-feedback">${uiTranslations.requiredField || 'This field is required'}</div>
             </div>
             <div class="mb-3">

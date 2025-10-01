@@ -20,6 +20,7 @@ A comprehensive web-based assessment tool to evaluate an organization's continuo
 - **Cumulative Results**: Toggle between current and historical assessment data
 - **Admin Dashboard**: User and group management for administrators
 - **Role-based Access Control**: Different permission levels (sysAdmin, assessment_admin, assessment_user)
+- **Team Name Autocomplete**: Smart suggestions from previous assessments when entering team names
 
 ## Practice Areas
 

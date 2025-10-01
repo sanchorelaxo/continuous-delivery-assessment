@@ -33,8 +33,17 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve static files from the project root directory
-app.use(express.static('./'));
+// Serve static files from the project root directory with no-cache headers for development
+app.use(express.static('./', {
+  setHeaders: (res, path) => {
+    // Disable caching for JavaScript files during development
+    if (path.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // MongoDB connection
 let db = null;
@@ -380,6 +389,35 @@ app.get('/api/assessment/:id', optionalAuth, async (req, res) => {
     });
   }
 });
+// Get unique team names for autocomplete
+app.get('/api/team-names', async (req, res) => {
+  try {
+    // Check if MongoDB integration is enabled
+    if (!mongoConfig.enabled || !db) {
+      return res.status(200).json({ success: true, teamNames: [] });
+    }
+    
+    const searchTerm = req.query.search || '';
+    
+    // Get distinct team names from assessments collection
+    const teamNames = await db.collection('assessments')
+      .distinct('metadata.teamName', {
+        'metadata.teamName': { $exists: true, $ne: '', $regex: `^${searchTerm}`, $options: 'i' }
+      });
+    
+    // Sort and limit results
+    const sortedTeamNames = teamNames
+      .filter(name => name && name.trim())
+      .sort((a, b) => a.localeCompare(b))
+      .slice(0, 10);
+    
+    res.json({ success: true, teamNames: sortedTeamNames });
+  } catch (error) {
+    console.error('Error fetching team names:', error);
+    res.status(500).json({ success: false, error: error.message, teamNames: [] });
+  }
+});
+
 
 // Get all assessments (with pagination) - optional authentication
 app.get('/api/assessments', optionalAuth, async (req, res) => {
